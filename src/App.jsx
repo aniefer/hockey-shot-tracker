@@ -8,7 +8,16 @@ import ConfigScreen from './components/ConfigScreen';
 import CreateReportSetup from './components/CreateReportSetup';
 import { useGameState } from './hooks/useGameState';
 import { createHeadToHeadReport } from './utils/headToHeadReport';
-import { getGame, loadConfig, loadGames, normalizeConfig, saveConfig } from './utils/storage';
+import { createBackup, downloadGzipJson, readGzipJsonBackup } from './utils/dataTransfer';
+import { alignGameTeams, findImportConflicts, mergeImportedGames } from './utils/gameImport';
+import {
+  getGame,
+  loadConfig,
+  loadGames,
+  normalizeConfig,
+  saveConfig,
+  saveGames,
+} from './utils/storage';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
@@ -89,6 +98,48 @@ export default function App() {
     handleConfigChange('teams', config.teams.filter((team) => team !== teamName));
   };
 
+  const handleExportAll = async () => {
+    const backup = createBackup(loadGames(), config.teams);
+    await downloadGzipJson(backup, 'hockey-shot-tracker-all-games.json.gz');
+  };
+
+  const handleExportGame = async (game) => {
+    const backup = createBackup([game], [game.homeTeam, game.awayTeam]);
+    const safeName = `${game.homeTeam}-vs-${game.awayTeam}-${game.date.slice(0, 10)}`
+      .replace(/[^a-z0-9-]+/gi, '-')
+      .replace(/^-|-$/g, '');
+    await downloadGzipJson(backup, `${safeName || 'hockey-game'}.json.gz`);
+  };
+
+  const handleImportFile = async (file, resolveConflicts) => {
+    const incoming = await readGzipJsonBackup(file);
+    const incomingGames = alignGameTeams(incoming.games, [...config.teams, ...incoming.teams]);
+    const existingGames = loadGames();
+    const conflicts = findImportConflicts(existingGames, incomingGames);
+    const keepImportedIds = conflicts.length > 0
+      ? await resolveConflicts(conflicts)
+      : new Set();
+    if (!keepImportedIds) return null;
+
+    const mergeResult = mergeImportedGames(
+      existingGames,
+      incomingGames,
+      (existing) => keepImportedIds.has(existing.id)
+    );
+    const updatedConfig = normalizeConfig({
+      ...config,
+      teams: [...config.teams, ...incoming.teams],
+    });
+    saveGames(mergeResult.games);
+    saveConfig(updatedConfig);
+    setConfig(updatedConfig);
+
+    return {
+      ...mergeResult,
+      teamsAdded: updatedConfig.teams.length - config.teams.length,
+    };
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {screen === 'home' && (
@@ -97,6 +148,8 @@ export default function App() {
           onViewGame={handleViewGame}
           onOpenConfig={() => setScreen('config')}
           onCreateReport={() => setScreen('reportSetup')}
+          onExportAll={handleExportAll}
+          onImportFile={handleImportFile}
           config={config}
           onAddTeam={handleAddTeam}
         />
@@ -132,6 +185,7 @@ export default function App() {
         <GamePlay
           gameState={gameState}
           onEndGame={handleGameEnd}
+          onExportGameData={handleExportGame}
           config={config}
         />
       )}
@@ -140,6 +194,7 @@ export default function App() {
           game={headToHeadReport?.game || gameState.game}
           headToHead={headToHeadReport}
           onBack={handleBackHome}
+          onExportGameData={handleExportGame}
           config={config}
         />
       )}

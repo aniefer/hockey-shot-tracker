@@ -9,8 +9,10 @@ import { exportToPdf } from '../utils/pdfExport';
 import { isRinkFlipped, normalizeFullGameShots } from '../utils/rinkOrientation';
 import { getShotCounts } from '../utils/shotStats';
 
-export default function GameSummary({ game, headToHead, onBack, config }) {
+export default function GameSummary({ game, headToHead, onBack, onExportGameData, config }) {
   const [exporting, setExporting] = useState(false);
+  const [exportingData, setExportingData] = useState(false);
+  const [exportDataError, setExportDataError] = useState('');
 
   const allShots = game.periods.flatMap((p) => p.shots);
   const fullGameMapShots = normalizeFullGameShots(game.periods);
@@ -156,6 +158,18 @@ export default function GameSummary({ game, headToHead, onBack, config }) {
     setExporting(false);
   };
 
+  const handleExportGameData = async () => {
+    setExportingData(true);
+    setExportDataError('');
+    try {
+      await onExportGameData(game);
+    } catch (error) {
+      setExportDataError(error instanceof Error ? error.message : 'Could not export game data.');
+    } finally {
+      setExportingData(false);
+    }
+  };
+
   // Bar component for zone charts
   const ZoneBar = ({ label, count, total, color }) => {
     const width = total > 0 ? (count / total) * 100 : 0;
@@ -185,17 +199,31 @@ export default function GameSummary({ game, headToHead, onBack, config }) {
           </svg>
           Home
         </button>
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white font-semibold rounded-xl active:bg-slate-900 transition-colors disabled:opacity-50"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-          </svg>
-          {exporting ? 'Exporting...' : 'Export PDF'}
-        </button>
+        <div className="flex items-center gap-1.5">
+          {!headToHead && (
+            <button
+              onClick={handleExportGameData}
+              disabled={exportingData}
+              className="px-2 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl active:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {exportingData ? 'Exporting...' : 'Export data'}
+            </button>
+          )}
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-1 px-2 py-2 bg-slate-800 text-white text-sm font-semibold rounded-xl active:bg-slate-900 transition-colors disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>
+            {exporting ? 'Exporting...' : 'Export PDF'}
+          </button>
+        </div>
       </div>
+      {exportDataError && (
+        <p className="mb-4 text-right text-sm text-red-600" role="alert">{exportDataError}</p>
+      )}
 
       <div id="game-summary-report" className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
         <div className="text-center mb-6">

@@ -96,8 +96,8 @@ export default function PeriodReport({ game, periodNumber, id, config }) {
   const periodsThrough = game.periods.filter((p) => {
     if (p.number === periodNumber) return true;
     if (typeof p.number === 'number' && typeof periodNumber === 'number') return p.number <= periodNumber;
-    if (typeof p.number === 'number') return true;
-    return false;
+    return typeof p.number === 'number';
+
   });
   const cumulativeShots = periodsThrough.flatMap((p) => p.shots);
   const cumulativeHome = cumulativeShots.filter((s) => s.team === 'home');

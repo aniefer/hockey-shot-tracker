@@ -8,7 +8,7 @@ import { exportToPdf } from '../utils/pdfExport';
 import { getDefaultShotTeam } from '../utils/defaultShotTeam';
 import { isRinkFlipped } from '../utils/rinkOrientation';
 
-export default function GamePlay({ gameState, onEndGame, config }) {
+export default function GamePlay({ gameState, onEndGame, onExportGameData, config }) {
   const {
     game,
     currentPeriod,
@@ -25,6 +25,8 @@ export default function GamePlay({ gameState, onEndGame, config }) {
   const [fadeShot, setFadeShot] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const [exportingReport, setExportingReport] = useState(false);
+  const [exportingGameData, setExportingGameData] = useState(false);
+  const [exportGameDataError, setExportGameDataError] = useState('');
   const [rinkOrientation, setRinkOrientation] = useState('landscape');
   const isPortrait = rinkOrientation === 'portrait';
 
@@ -49,6 +51,18 @@ export default function GamePlay({ gameState, onEndGame, config }) {
       console.error('Period report export failed:', err);
     }
     setExportingReport(false);
+  };
+
+  const handleExportGameData = async () => {
+    setExportingGameData(true);
+    setExportGameDataError('');
+    try {
+      await onExportGameData(game);
+    } catch (error) {
+      setExportGameDataError(error instanceof Error ? error.message : 'Could not export game data.');
+    } finally {
+      setExportingGameData(false);
+    }
   };
 
   const exportButtonLabel = (n) => {
@@ -136,7 +150,15 @@ export default function GamePlay({ gameState, onEndGame, config }) {
             </span>
           </div>
         )}
-        <div className="flex justify-end mt-2">
+        <div className="flex items-center justify-between mt-2">
+          <button
+            type="button"
+            onClick={handleExportGameData}
+            disabled={exportingGameData}
+            className="text-sm font-medium text-blue-600 active:text-blue-800 disabled:opacity-50"
+          >
+            {exportingGameData ? 'Exporting game data...' : 'Export game data'}
+          </button>
           <button
             type="button"
             onClick={() => setRinkOrientation(isPortrait ? 'landscape' : 'portrait')}
@@ -151,6 +173,9 @@ export default function GamePlay({ gameState, onEndGame, config }) {
             </svg>
           </button>
         </div>
+        {exportGameDataError && (
+          <p className="mt-1 text-right text-xs text-red-600" role="alert">{exportGameDataError}</p>
+        )}
       </div>
 
       {/* Rink */}

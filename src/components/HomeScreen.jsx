@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useStorage } from '../hooks/useStorage';
 import { getShotCounts } from '../utils/shotStats';
 
@@ -7,12 +7,18 @@ export default function HomeScreen({
   onViewGame,
   onOpenConfig,
   onCreateReport,
+  onExportAll,
+  onImportFile,
   onAddTeam,
   config,
 }) {
-  const { games, deleteGame } = useStorage();
+  const { games, deleteGame, refresh } = useStorage();
   const [firstTeamName, setFirstTeamName] = useState('');
   const [teamError, setTeamError] = useState('');
+  const [transferBusy, setTransferBusy] = useState(false);
+  const [transferMessage, setTransferMessage] = useState('');
+  const [conflictDialog, setConflictDialog] = useState(null);
+  const fileInputRef = useRef(null);
 
   const formatDate = (iso) => {
     const d = new Date(iso);
@@ -64,8 +70,150 @@ export default function HomeScreen({
     setTeamError('');
   };
 
+  const handleExportAll = async () => {
+    setTransferBusy(true);
+    setTransferMessage('');
+    try {
+      await onExportAll();
+    } catch (error) {
+      setTransferMessage(error instanceof Error ? error.message : 'Could not export game data.');
+    } finally {
+      setTransferBusy(false);
+    }
+  };
+
+  const requestConflictChoices = (conflicts) => new Promise((resolve) => {
+    setConflictDialog({
+      conflicts,
+      keepImported: new Set(),
+      resolve,
+    });
+  });
+
+  const toggleConflict = (existingId) => {
+    setConflictDialog((dialog) => {
+      const keepImported = new Set(dialog.keepImported);
+      if (keepImported.has(existingId)) keepImported.delete(existingId);
+      else keepImported.add(existingId);
+      return { ...dialog, keepImported };
+    });
+  };
+
+  const setAllConflicts = (keepAll) => {
+    setConflictDialog((dialog) => ({
+      ...dialog,
+      keepImported: new Set(keepAll ? dialog.conflicts.map(({ existing }) => existing.id) : []),
+    }));
+  };
+
+  const closeConflictDialog = (confirmed) => {
+    conflictDialog.resolve(confirmed ? conflictDialog.keepImported : null);
+    setConflictDialog(null);
+  };
+
+  const handleImportFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setTransferBusy(true);
+    setTransferMessage('');
+    try {
+      const result = await onImportFile(file, requestConflictChoices);
+      if (!result) {
+        setTransferMessage('Import cancelled.');
+        return;
+      }
+      refresh();
+      setTransferMessage(
+        `Import complete: ${result.added} added, ${result.replaced} replaced, `
+        + `${result.unchanged} unchanged, ${result.keptExisting} existing version${result.keptExisting === 1 ? '' : 's'} kept; `
+        + `${result.teamsAdded} team${result.teamsAdded === 1 ? '' : 's'} added.`
+      );
+    } catch (error) {
+      setTransferMessage(error instanceof Error ? error.message : 'Could not import this file.');
+    } finally {
+      event.target.value = '';
+      setTransferBusy(false);
+    }
+  };
+
+  const transferSucceeded = transferMessage.startsWith('Import complete:');
+  const formatShotCount = (game) => {
+    const shots = game.periods.reduce((total, period) => total + period.shots.length, 0);
+    return `${shots} shot${shots === 1 ? '' : 's'}`;
+  };
+
   return (
     <div className="relative min-h-screen max-w-lg mx-auto px-4 py-8">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".gz,application/gzip"
+        onChange={handleImportFile}
+        className="hidden"
+        aria-label="Import game data"
+      />
+      {conflictDialog && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/50 px-4">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-conflicts-title"
+            className="flex max-h-[85vh] w-full max-w-md flex-col rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h2 id="import-conflicts-title" className="text-xl font-bold text-slate-800">
+              Resolve import conflicts
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              These games already exist with different data. Check the ones where you want to
+              replace your saved version with the imported one; unchecked games keep your version.
+            </p>
+            <div className="mt-3 flex gap-4 text-sm font-medium text-blue-600">
+              <button type="button" onClick={() => setAllConflicts(true)}>Select all</button>
+              <button type="button" onClick={() => setAllConflicts(false)}>Select none</button>
+            </div>
+            <ul className="mt-3 space-y-2 overflow-y-auto">
+              {conflictDialog.conflicts.map(({ existing, incoming }) => (
+                <li key={existing.id}>
+                  <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-3">
+                    <input
+                      type="checkbox"
+                      checked={conflictDialog.keepImported.has(existing.id)}
+                      onChange={() => toggleConflict(existing.id)}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <span className="text-sm text-slate-700">
+                      <span className="block font-semibold">
+                        {existing.homeTeam} vs {existing.awayTeam}
+                      </span>
+                      <span className="block text-slate-500">{formatDate(existing.date)}</span>
+                      <span className="block text-slate-500">
+                        Saved: {formatShotCount(existing)} · Imported: {formatShotCount(incoming)}
+                      </span>
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => closeConflictDialog(false)}
+                className="rounded-xl border border-slate-300 py-3 font-semibold text-slate-700"
+              >
+                Cancel import
+              </button>
+              <button
+                type="button"
+                onClick={() => closeConflictDialog(true)}
+                className="rounded-xl bg-blue-600 py-3 font-semibold text-white active:bg-blue-700"
+              >
+                Continue
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       {config.teams.length === 0 && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-slate-900/50 px-4">
           <section
@@ -100,6 +248,22 @@ export default function HomeScreen({
               >
                 Add team
               </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={transferBusy}
+                className="mt-3 w-full rounded-xl border border-slate-300 py-3 font-semibold text-slate-700 disabled:opacity-50"
+              >
+                Import backup
+              </button>
+              {transferMessage && (
+                <p
+                  className={`mt-3 text-sm ${transferSucceeded ? 'text-slate-600' : 'text-red-600'}`}
+                  role={transferSucceeded ? 'status' : 'alert'}
+                >
+                  {transferMessage}
+                </p>
+              )}
             </form>
           </section>
         </div>
@@ -143,6 +307,32 @@ export default function HomeScreen({
         >
           Create Report
         </button>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={transferBusy}
+            className="w-full rounded-xl border border-slate-300 bg-white py-3 font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-50"
+          >
+            Import backup
+          </button>
+          <button
+            type="button"
+            onClick={handleExportAll}
+            disabled={transferBusy}
+            className="w-full rounded-xl border border-slate-300 bg-white py-3 font-semibold text-slate-700 active:bg-slate-100 disabled:opacity-50"
+          >
+            {transferBusy ? 'Working...' : 'Export all games'}
+          </button>
+        </div>
+        {transferMessage && config.teams.length > 0 && (
+          <p
+            className={`text-center text-sm ${transferSucceeded ? 'text-slate-600' : 'text-red-600'}`}
+            role={transferSucceeded ? 'status' : 'alert'}
+          >
+            {transferMessage}
+          </p>
+        )}
         {config.teams.length === 1 && (
           <p className="text-center text-sm text-slate-500">
             Add another team in Configuration to create a report.

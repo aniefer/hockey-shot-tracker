@@ -90,6 +90,10 @@ export function saveGame(game) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
 }
 
+export function saveGames(games) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+}
+
 export function deleteGame(gameId) {
   const games = loadGames().filter((g) => g.id !== gameId);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
