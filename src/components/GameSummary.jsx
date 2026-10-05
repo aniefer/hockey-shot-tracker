@@ -3,7 +3,9 @@ import ShotMap from './ShotMap';
 import MiniShotMap from './MiniShotMap';
 import Heatmap from './Heatmap';
 import ShotTimeline from './ShotTimeline';
+import ShotOutcomePie from './ShotOutcomePie';
 import { exportToPdf } from '../utils/pdfExport';
+import { getShotCounts } from '../utils/shotStats';
 
 export default function GameSummary({ game, onBack }) {
   const [exporting, setExporting] = useState(false);
@@ -15,6 +17,9 @@ export default function GameSummary({ game, onBack }) {
   const awayGoals = awayShots.filter((s) => s.result === 'goal').length;
   const homeBlocked = homeShots.filter((s) => s.result === 'blocked').length;
   const awayBlocked = awayShots.filter((s) => s.result === 'blocked').length;
+  const shotCounts = getShotCounts(allShots);
+  const homeScoringChances = shotCounts.homeScoringChances;
+  const awayScoringChances = shotCounts.awayScoringChances;
 
   const pct = (num, denom) => {
     if (denom === 0) return '-';
@@ -129,6 +134,8 @@ export default function GameSummary({ game, onBack }) {
       awayGoals: away.filter((s) => s.result === 'goal').length,
       homeBlocked: home.filter((s) => s.result === 'blocked').length,
       awayBlocked: away.filter((s) => s.result === 'blocked').length,
+      homeScoringChances: home.filter((s) => s.result === 'scoring_chance').length,
+      awayScoringChances: away.filter((s) => s.result === 'scoring_chance').length,
     };
   };
 
@@ -201,6 +208,7 @@ export default function GameSummary({ game, onBack }) {
             <div className="text-3xl font-bold text-blue-600">{homeGoals}</div>
             <div className="text-sm font-semibold text-slate-600">{game.homeTeam}</div>
             <div className="text-xs text-slate-400">{homeShots.length} shots</div>
+            <div className="text-xs text-violet-600">{homeScoringChances} scoring chances</div>
           </div>
           <div className="flex items-center justify-center">
             <span className="text-slate-300 text-lg font-bold">FINAL</span>
@@ -209,6 +217,7 @@ export default function GameSummary({ game, onBack }) {
             <div className="text-3xl font-bold text-red-500">{awayGoals}</div>
             <div className="text-sm font-semibold text-slate-600">{game.awayTeam}</div>
             <div className="text-xs text-slate-400">{awayShots.length} shots</div>
+            <div className="text-xs text-violet-600">{awayScoringChances} scoring chances</div>
           </div>
         </div>
 
@@ -241,6 +250,9 @@ export default function GameSummary({ game, onBack }) {
                         {ps.homeGoals > 0 && (
                           <span className="text-emerald-600 text-xs ml-0.5">({ps.homeGoals}G)</span>
                         )}
+                        {ps.homeScoringChances > 0 && (
+                          <span className="text-violet-600 text-xs ml-0.5">({ps.homeScoringChances} SC)</span>
+                        )}
                       </td>
                     );
                   })}
@@ -255,6 +267,9 @@ export default function GameSummary({ game, onBack }) {
                         {ps.awayShots.length}
                         {ps.awayGoals > 0 && (
                           <span className="text-emerald-600 text-xs ml-0.5">({ps.awayGoals}G)</span>
+                        )}
+                        {ps.awayScoringChances > 0 && (
+                          <span className="text-violet-600 text-xs ml-0.5">({ps.awayScoringChances} SC)</span>
                         )}
                       </td>
                     );
@@ -287,6 +302,17 @@ export default function GameSummary({ game, onBack }) {
               {pct(homeBlocked, homeShots.length)}
             </div>
             <div className="text-xs text-slate-500">{game.awayTeam} save %</div>
+          </div>
+        </div>
+
+        {/* Shot outcome breakdown */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+            Shot Outcome Breakdown
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <ShotOutcomePie teamName={game.homeTeam} shots={homeShots} />
+            <ShotOutcomePie teamName={game.awayTeam} shots={awayShots} />
           </div>
         </div>
 

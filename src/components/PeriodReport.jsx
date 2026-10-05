@@ -1,4 +1,5 @@
 import MiniShotMap from './MiniShotMap';
+import { getShotCounts } from '../utils/shotStats';
 
 export default function PeriodReport({ game, periodNumber, id }) {
   const period = game.periods.find((p) => p.number === periodNumber);
@@ -11,6 +12,9 @@ export default function PeriodReport({ game, periodNumber, id }) {
   const awayGoals = awayShots.filter((s) => s.result === 'goal');
   const homeBlocked = homeShots.filter((s) => s.result === 'blocked').length;
   const awayBlocked = awayShots.filter((s) => s.result === 'blocked').length;
+  const periodShotCounts = getShotCounts(shots);
+  const homeScoringChances = periodShotCounts.homeScoringChances;
+  const awayScoringChances = periodShotCounts.awayScoringChances;
 
   const pct = (num, denom) => {
     if (denom === 0) return '-';
@@ -99,6 +103,9 @@ export default function PeriodReport({ game, periodNumber, id }) {
   const cumulativeAway = cumulativeShots.filter((s) => s.team === 'away');
   const cumulativeHomeGoals = cumulativeHome.filter((s) => s.result === 'goal').length;
   const cumulativeAwayGoals = cumulativeAway.filter((s) => s.result === 'goal').length;
+  const cumulativeShotCounts = getShotCounts(cumulativeShots);
+  const cumulativeHomeScoringChances = cumulativeShotCounts.homeScoringChances;
+  const cumulativeAwayScoringChances = cumulativeShotCounts.awayScoringChances;
 
   // All goals sorted chronologically
   const allGoals = [
@@ -151,6 +158,7 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Shots</th>
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Goals</th>
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Blocked</th>
+              <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Scoring Chances</th>
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Sh%</th>
             </tr>
           </thead>
@@ -160,6 +168,7 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <td className="text-center py-1.5 px-2 text-blue-600">{homeShots.length}</td>
               <td className="text-center py-1.5 px-2 font-semibold text-blue-600">{homeGoals.length}</td>
               <td className="text-center py-1.5 px-2 text-blue-600">{homeBlocked}</td>
+              <td className="text-center py-1.5 px-2 text-violet-600">{homeScoringChances}</td>
               <td className="text-center py-1.5 px-2 text-blue-600">{pct(homeGoals.length, homeShots.length)}</td>
             </tr>
             <tr>
@@ -167,6 +176,7 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <td className="text-center py-1.5 px-2 text-red-500">{awayShots.length}</td>
               <td className="text-center py-1.5 px-2 font-semibold text-red-500">{awayGoals.length}</td>
               <td className="text-center py-1.5 px-2 text-red-500">{awayBlocked}</td>
+              <td className="text-center py-1.5 px-2 text-violet-600">{awayScoringChances}</td>
               <td className="text-center py-1.5 px-2 text-red-500">{pct(awayGoals.length, awayShots.length)}</td>
             </tr>
           </tbody>
@@ -213,7 +223,7 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
               <span className="text-red-500 font-medium">{game.awayTeam}</span>
             </span>
-            <span className="text-slate-400">● goal / ○ blocked</span>
+            <span className="text-slate-400">● goal / ○ blocked / ◆ scoring chance</span>
           </div>
         </div>
       )}
@@ -258,13 +268,13 @@ export default function PeriodReport({ game, periodNumber, id }) {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-blue-50 rounded-lg p-2.5 text-center">
               <div className="font-bold text-blue-600">
-                {cumulativeHome.length} shots / {cumulativeHomeGoals}G
+                {cumulativeHome.length} shots / {cumulativeHomeGoals}G / {cumulativeHomeScoringChances} SC
               </div>
               <div className="text-xs text-slate-500">{game.homeTeam}</div>
             </div>
             <div className="bg-red-50 rounded-lg p-2.5 text-center">
               <div className="font-bold text-red-500">
-                {cumulativeAway.length} shots / {cumulativeAwayGoals}G
+                {cumulativeAway.length} shots / {cumulativeAwayGoals}G / {cumulativeAwayScoringChances} SC
               </div>
               <div className="text-xs text-slate-500">{game.awayTeam}</div>
             </div>

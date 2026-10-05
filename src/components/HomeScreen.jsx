@@ -1,4 +1,5 @@
 import { useStorage } from '../hooks/useStorage';
+import { getShotCounts } from '../utils/shotStats';
 
 export default function HomeScreen({ onNewGame, onViewGame }) {
   const { games, deleteGame } = useStorage();
@@ -27,6 +28,11 @@ export default function HomeScreen({ onNewGame, onViewGame }) {
     return game.periods
       .flatMap((p) => p.shots)
       .filter((s) => s.team === team && s.result === 'goal').length;
+  };
+
+  const getScoringChances = (game, team) => {
+    const counts = getShotCounts(game.periods.flatMap((period) => period.shots));
+    return team === 'home' ? counts.homeScoringChances : counts.awayScoringChances;
   };
 
   const handleDelete = (e, id) => {
@@ -85,6 +91,9 @@ export default function HomeScreen({ onNewGame, onViewGame }) {
                       ) : (
                         <>{getTotalShots(game)} shot{getTotalShots(game) !== 1 ? 's' : ''} recorded</>
                       )}
+                    </div>
+                    <div className="text-xs text-violet-600 mt-1">
+                      Scoring chances: {game.homeTeam} {getScoringChances(game, 'home')} / {game.awayTeam} {getScoringChances(game, 'away')}
                     </div>
                   </div>
                   <button

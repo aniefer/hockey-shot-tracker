@@ -26,7 +26,7 @@ Tap "New Game," enter the two team names, and you're ready to go. The date and t
 
 ### 2. Track shots during the game
 
-The app displays a clean whiteboard-style hockey rink. When a shot on goal happens, tap the spot on the ice where it came from. A quick popup lets you tag the shot with which team took it, whether it was a goal or a save, and optionally the player's jersey number. Tap OK and you're back to watching the game.
+The app displays a clean whiteboard-style hockey rink. When a shot on goal happens, tap the spot on the ice where it came from. A quick popup lets you tag the team, whether it was a goal, blocked shot, or scoring chance, and optionally the player's jersey number. Tap OK and you're back to watching the game.
 
 The rink stays clean throughout. No clutter, no marks piling up. You can tap "View Shots" any time to pull up an overlay of everything you've recorded so far, then dismiss it and keep going.
 
@@ -48,9 +48,11 @@ Other things you can do during the game:
 After the final period, tap "End & Save Game" and the app generates a full summary report:
 
 - Final score and total shots per team
+- Scoring chance counts for each team
+- Shot outcome pie charts for goals, blocked shots, scoring chances, and regular shots
 - Period-by-period shot breakdown
 - Goalie save percentages
-- Shot location map showing every shot plotted on the rink (goals are filled circles, saves are open circles)
+- Shot location map showing every shot plotted on the rink (goals are filled circles, blocked shots are open circles, and scoring chances are diamonds)
 - Shot density heatmap you can filter by team
 - Per-player stats (shots and goals) for any players you tagged by number
 
@@ -94,6 +96,8 @@ cd hockey-shot-tracker
 npm install
 npm run dev
 ```
+
+Run the unit tests with `npm test`.
 
 ---
 

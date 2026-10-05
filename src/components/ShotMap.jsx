@@ -8,13 +8,22 @@ export default function ShotMap({ shots, homeTeam, awayTeam }) {
           const cx = shot.x * 200;
           const cy = shot.y * 85;
           const isGoal = shot.result === 'goal';
+          const isScoringChance = shot.result === 'scoring_chance';
           const isHome = shot.team === 'home';
           const isAway = shot.team === 'away';
           const color = isHome ? '#3b82f6' : isAway ? '#ef4444' : '#94a3b8';
 
           return (
             <g key={shot.id}>
-              {isGoal ? (
+              {isScoringChance ? (
+                <polygon
+                  points={`${cx},${cy - 2} ${cx + 2},${cy} ${cx},${cy + 2} ${cx - 2},${cy}`}
+                  fill="white"
+                  stroke={color}
+                  strokeWidth={0.7}
+                  opacity={0.85}
+                />
+              ) : isGoal ? (
                 <circle cx={cx} cy={cy} r={2} fill={color} opacity={0.85} />
               ) : (
                 <circle cx={cx} cy={cy} r={1.5} fill="none" stroke={color} strokeWidth={0.5} opacity={0.85} />
@@ -46,12 +55,20 @@ export default function ShotMap({ shots, homeTeam, awayTeam }) {
           {homeTeam} blocked
         </span>
         <span className="flex items-center gap-1">
+          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><polygon points="5,1 9,5 5,9 1,5" fill="white" stroke="#3b82f6" strokeWidth="1" /></svg>
+          {homeTeam} scoring chance
+        </span>
+        <span className="flex items-center gap-1">
           <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#ef4444" /></svg>
           {awayTeam} goal
         </span>
         <span className="flex items-center gap-1">
           <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="#ef4444" strokeWidth="1" /></svg>
           {awayTeam} blocked
+        </span>
+        <span className="flex items-center gap-1">
+          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><polygon points="5,1 9,5 5,9 1,5" fill="white" stroke="#ef4444" strokeWidth="1" /></svg>
+          {awayTeam} scoring chance
         </span>
       </div>
     </div>

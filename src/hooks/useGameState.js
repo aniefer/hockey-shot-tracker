@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { generateId } from '../utils/generateId';
 import { saveGame } from '../utils/storage';
+import { getShotCounts } from '../utils/shotStats';
 
 function createNewGame(homeTeam, awayTeam, date) {
   return {
@@ -127,13 +128,7 @@ export function useGameState(initialGame = null) {
     ? (game.periods.find((p) => p.number === currentPeriod)?.shots || [])
     : [];
 
-  const shotCounts = game
-    ? {
-        home: allShots.filter((s) => s.team === 'home').length,
-        away: allShots.filter((s) => s.team === 'away').length,
-        total: allShots.length,
-      }
-    : { home: 0, away: 0, total: 0 };
+  const shotCounts = getShotCounts(allShots);
 
   return {
     game,

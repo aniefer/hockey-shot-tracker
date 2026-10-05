@@ -5,6 +5,7 @@ import ShotOverlay from './ShotOverlay';
 import PeriodControls from './PeriodControls';
 import PeriodReport from './PeriodReport';
 import { exportToPdf } from '../utils/pdfExport';
+import { getDefaultShotTeam } from '../utils/defaultShotTeam';
 
 export default function GamePlay({ gameState, onEndGame }) {
   const {
@@ -23,6 +24,8 @@ export default function GamePlay({ gameState, onEndGame }) {
   const [fadeShot, setFadeShot] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const [exportingReport, setExportingReport] = useState(false);
+  const [rinkOrientation, setRinkOrientation] = useState('landscape');
+  const isPortrait = rinkOrientation === 'portrait';
 
   // Rink flips for period 2
   const flipped = currentPeriod === 2;
@@ -55,9 +58,9 @@ export default function GamePlay({ gameState, onEndGame }) {
   const handleTapRink = useCallback(
     (x, y) => {
       if (currentPeriod === null) return;
-      setPendingShot({ x, y });
+      setPendingShot({ x, y, initialTeam: getDefaultShotTeam(x, flipped) });
     },
-    [currentPeriod]
+    [currentPeriod, flipped]
   );
 
   const handleConfirmShot = useCallback(
@@ -122,12 +125,38 @@ export default function GamePlay({ gameState, onEndGame }) {
             </>
           )}
         </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-4 text-xs mt-1">
+          <span className="text-blue-600 font-semibold">
+            {game.homeTeam}: {shotCounts.homeScoringChances} scoring chances
+          </span>
+          <span className="text-red-500 font-semibold">
+            {game.awayTeam}: {shotCounts.awayScoringChances} scoring chances
+          </span>
+        </div>
+        <div className="flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={() => setRinkOrientation(isPortrait ? 'landscape' : 'portrait')}
+            aria-pressed={isPortrait}
+            aria-label={`Switch rink to ${isPortrait ? 'landscape' : 'portrait'} orientation`}
+            title={`Switch rink to ${isPortrait ? 'landscape' : 'portrait'} orientation`}
+            className="p-2 bg-slate-100 text-slate-600 rounded-lg active:bg-slate-200 transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <rect x="8.5" y="8.5" width="7" height="7" rx="1" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5.8 8.3a7.4 7.4 0 0 1 12.6-3.1M16 4.5l2.5.7-.1 2.6M18.2 15.7a7.4 7.4 0 0 1-12.6 3.1M8 19.5l-2.5-.7.1-2.6" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Rink */}
       <div className="flex-1 flex items-center justify-center mb-3">
-        <div className="w-full relative">
-          <HockeyRink onTapRink={currentPeriod !== null ? handleTapRink : null}>
+        <div className={`${isPortrait ? 'w-fit' : 'w-full'} relative`}>
+          <HockeyRink
+            orientation={rinkOrientation}
+            onTapRink={currentPeriod !== null ? handleTapRink : null}
+          >
             {/* Prompt when no period is active */}
             {currentPeriod === null && (
               <text
@@ -169,14 +198,37 @@ export default function GamePlay({ gameState, onEndGame }) {
           {/* Team goal labels overlaid on rink */}
           {currentPeriod !== null && (
             <>
-              <div className="absolute left-1 bottom-1 px-1.5 py-0.5 rounded bg-white/70 text-[10px] font-bold leading-tight"
-                style={{ color: flipped ? '#ef4444' : '#3b82f6' }}>
-                {flipped ? game.awayTeam : game.homeTeam} Goal
-              </div>
-              <div className="absolute right-1 bottom-1 px-1.5 py-0.5 rounded bg-white/70 text-[10px] font-bold leading-tight text-right"
-                style={{ color: flipped ? '#3b82f6' : '#ef4444' }}>
-                {flipped ? game.homeTeam : game.awayTeam} Goal
-              </div>
+              {isPortrait ? (
+                <>
+                  <div
+                    className="absolute top-1 left-1 right-1 px-1.5 py-0.5 rounded bg-white/70 text-[10px] font-bold leading-tight text-center"
+                    style={{ color: flipped ? '#ef4444' : '#3b82f6' }}
+                  >
+                    {flipped ? game.awayTeam : game.homeTeam} Goal
+                  </div>
+                  <div
+                    className="absolute bottom-1 left-1 right-1 px-1.5 py-0.5 rounded bg-white/70 text-[10px] font-bold leading-tight text-center"
+                    style={{ color: flipped ? '#3b82f6' : '#ef4444' }}
+                  >
+                    {flipped ? game.homeTeam : game.awayTeam} Goal
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div
+                    className="absolute left-1 bottom-1 px-1.5 py-0.5 rounded bg-white/70 text-[10px] font-bold leading-tight"
+                    style={{ color: flipped ? '#ef4444' : '#3b82f6' }}
+                  >
+                    {flipped ? game.awayTeam : game.homeTeam} Goal
+                  </div>
+                  <div
+                    className="absolute right-1 bottom-1 px-1.5 py-0.5 rounded bg-white/70 text-[10px] font-bold leading-tight text-right"
+                    style={{ color: flipped ? '#3b82f6' : '#ef4444' }}
+                  >
+                    {flipped ? game.homeTeam : game.awayTeam} Goal
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
@@ -244,6 +296,7 @@ export default function GamePlay({ gameState, onEndGame }) {
         <ShotPopup
           x={pendingShot.x}
           y={pendingShot.y}
+          initialTeam={pendingShot.initialTeam}
           homeTeam={game.homeTeam}
           awayTeam={game.awayTeam}
           onConfirm={handleConfirmShot}
@@ -256,6 +309,7 @@ export default function GamePlay({ gameState, onEndGame }) {
         <ShotOverlay
           periods={game.periods}
           currentPeriod={currentPeriod}
+          orientation={rinkOrientation}
           homeTeam={game.homeTeam}
           awayTeam={game.awayTeam}
           onClose={() => setShowOverlay(false)}

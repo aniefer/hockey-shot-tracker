@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-export default function ShotPopup({ x, y, homeTeam, awayTeam, onConfirm, onCancel }) {
-  const [team, setTeam] = useState(null);
+export default function ShotPopup({ x, y, initialTeam, homeTeam, awayTeam, onConfirm, onCancel }) {
+  const [team, setTeam] = useState(initialTeam);
   const [result, setResult] = useState(null);
   const [playerNumber, setPlayerNumber] = useState('');
 
@@ -9,8 +9,8 @@ export default function ShotPopup({ x, y, homeTeam, awayTeam, onConfirm, onCance
     onConfirm({ team, result, playerNumber: playerNumber.trim() });
   };
 
-  const ToggleButton = ({ active, onClick, children, color = 'blue' }) => {
-    const base = 'flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors';
+  const ToggleButton = ({ active, onClick, children, color = 'blue', compact = false }) => {
+    const base = `flex-1 py-2.5 rounded-lg ${compact ? 'px-1 text-xs leading-tight' : 'text-sm'} font-semibold transition-colors`;
     const colors = {
       blue: active
         ? 'bg-blue-600 text-white'
@@ -23,6 +23,9 @@ export default function ShotPopup({ x, y, homeTeam, awayTeam, onConfirm, onCance
         : 'bg-slate-100 text-slate-600 active:bg-slate-200',
       amber: active
         ? 'bg-amber-500 text-white'
+        : 'bg-slate-100 text-slate-600 active:bg-slate-200',
+      purple: active
+        ? 'bg-violet-600 text-white'
         : 'bg-slate-100 text-slate-600 active:bg-slate-200',
     };
     return (
@@ -57,6 +60,14 @@ export default function ShotPopup({ x, y, homeTeam, awayTeam, onConfirm, onCance
             </ToggleButton>
             <ToggleButton active={result === 'blocked'} onClick={() => setResult(result === 'blocked' ? null : 'blocked')} color="amber">
               Blocked
+            </ToggleButton>
+            <ToggleButton
+              active={result === 'scoring_chance'}
+              onClick={() => setResult(result === 'scoring_chance' ? null : 'scoring_chance')}
+              color="purple"
+              compact
+            >
+              Scoring Chance
             </ToggleButton>
           </div>
         </div>

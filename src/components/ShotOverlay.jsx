@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import HockeyRink from './HockeyRink';
 
-export default function ShotOverlay({ periods, currentPeriod, homeTeam, awayTeam, onClose }) {
+export default function ShotOverlay({
+  periods,
+  currentPeriod,
+  orientation = 'landscape',
+  homeTeam,
+  awayTeam,
+  onClose,
+}) {
   const [selectedPeriod, setSelectedPeriod] = useState('all');
 
   const periodLabel = (n) => {
@@ -16,10 +23,11 @@ export default function ShotOverlay({ periods, currentPeriod, homeTeam, awayTeam
   const displayShots = selectedPeriod === 'all'
     ? allShots
     : periods.find((p) => String(p.number) === String(selectedPeriod))?.shots || [];
+  const isPortrait = orientation === 'portrait';
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-4">
+      <div className={`bg-white rounded-2xl shadow-xl w-full max-w-2xl p-4 ${isPortrait ? 'max-h-[90vh] overflow-y-auto' : ''}`}>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-bold text-slate-800">
             Recorded Shots ({displayShots.length})
@@ -64,41 +72,53 @@ export default function ShotOverlay({ periods, currentPeriod, homeTeam, awayTeam
           </div>
         )}
 
-        <HockeyRink>
-          {displayShots.map((shot) => {
-            const cx = shot.x * 200;
-            const cy = shot.y * 85;
-            const isGoal = shot.result === 'goal';
-            const isHome = shot.team === 'home';
-            const isAway = shot.team === 'away';
-            const color = isHome ? '#3b82f6' : isAway ? '#ef4444' : '#94a3b8';
+        <div className="flex justify-center">
+          <HockeyRink orientation={orientation}>
+            {displayShots.map((shot) => {
+              const cx = shot.x * 200;
+              const cy = shot.y * 85;
+              const isGoal = shot.result === 'goal';
+              const isScoringChance = shot.result === 'scoring_chance';
+              const isHome = shot.team === 'home';
+              const isAway = shot.team === 'away';
+              const color = isHome ? '#3b82f6' : isAway ? '#ef4444' : '#94a3b8';
 
-            return (
-              <g key={shot.id}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={isGoal ? 2 : 1.5}
-                  fill={isGoal ? color : 'none'}
-                  stroke={color}
-                  strokeWidth={0.5}
-                />
-                {shot.playerNumber && (
-                  <text
-                    x={cx}
-                    y={cy - 2.5}
-                    textAnchor="middle"
-                    fontSize="2.5"
-                    fill={color}
-                    fontWeight="bold"
-                  >
-                    {shot.playerNumber}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </HockeyRink>
+              return (
+                <g key={shot.id}>
+                  {isScoringChance ? (
+                    <polygon
+                      points={`${cx},${cy - 2} ${cx + 2},${cy} ${cx},${cy + 2} ${cx - 2},${cy}`}
+                      fill="white"
+                      stroke={color}
+                      strokeWidth={0.7}
+                    />
+                  ) : (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={isGoal ? 2 : 1.5}
+                      fill={isGoal ? color : 'none'}
+                      stroke={color}
+                      strokeWidth={0.5}
+                    />
+                  )}
+                  {shot.playerNumber && (
+                    <text
+                      x={cx}
+                      y={cy - 2.5}
+                      textAnchor="middle"
+                      fontSize="2.5"
+                      fill={color}
+                      fontWeight="bold"
+                    >
+                      {shot.playerNumber}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </HockeyRink>
+        </div>
 
         {/* Legend */}
         <div className="mt-3 space-y-1.5">
@@ -128,6 +148,20 @@ export default function ShotOverlay({ periods, currentPeriod, homeTeam, awayTeam
                 <circle cx="6" cy="6" r="4" fill="none" stroke="#ef4444" strokeWidth="1.5" />
               </svg>
               {awayTeam} Blocked
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-5 text-xs text-slate-600">
+            <span className="flex items-center gap-1.5">
+              <svg className="w-3 h-3" viewBox="0 0 12 12">
+                <polygon points="6,1 11,6 6,11 1,6" fill="white" stroke="#3b82f6" strokeWidth="1.5" />
+              </svg>
+              {homeTeam} Scoring Chance
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg className="w-3 h-3" viewBox="0 0 12 12">
+                <polygon points="6,1 11,6 6,11 1,6" fill="white" stroke="#ef4444" strokeWidth="1.5" />
+              </svg>
+              {awayTeam} Scoring Chance
             </span>
           </div>
         </div>
