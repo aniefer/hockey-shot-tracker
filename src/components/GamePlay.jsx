@@ -6,6 +6,7 @@ import PeriodControls from './PeriodControls';
 import PeriodReport from './PeriodReport';
 import { exportToPdf } from '../utils/pdfExport';
 import { getDefaultShotTeam } from '../utils/defaultShotTeam';
+import { isRinkFlipped } from '../utils/rinkOrientation';
 
 export default function GamePlay({ gameState, onEndGame, config }) {
   const {
@@ -28,7 +29,7 @@ export default function GamePlay({ gameState, onEndGame, config }) {
   const isPortrait = rinkOrientation === 'portrait';
 
   // Rink flips for period 2
-  const flipped = currentPeriod === 2;
+  const flipped = isRinkFlipped(currentPeriod);
 
   // Most recently completed period (for intermission report export)
   const lastCompletedPeriod = (() => {

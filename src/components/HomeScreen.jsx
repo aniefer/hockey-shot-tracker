@@ -1,8 +1,18 @@
+import { useState } from 'react';
 import { useStorage } from '../hooks/useStorage';
 import { getShotCounts } from '../utils/shotStats';
 
-export default function HomeScreen({ onNewGame, onViewGame, onOpenConfig, config }) {
+export default function HomeScreen({
+  onNewGame,
+  onViewGame,
+  onOpenConfig,
+  onCreateReport,
+  onAddTeam,
+  config,
+}) {
   const { games, deleteGame } = useStorage();
+  const [firstTeamName, setFirstTeamName] = useState('');
+  const [teamError, setTeamError] = useState('');
 
   const formatDate = (iso) => {
     const d = new Date(iso);
@@ -42,17 +52,72 @@ export default function HomeScreen({ onNewGame, onViewGame, onOpenConfig, config
     }
   };
 
+  const handleAddFirstTeam = (event) => {
+    event.preventDefault();
+    const name = firstTeamName.trim();
+    if (!name) {
+      setTeamError('Enter a team name.');
+      return;
+    }
+    onAddTeam(name);
+    setFirstTeamName('');
+    setTeamError('');
+  };
+
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
+    <div className="relative min-h-screen max-w-lg mx-auto px-4 py-8">
+      {config.teams.length === 0 && (
+        <div className="fixed inset-0 z-10 flex items-center justify-center bg-slate-900/50 px-4">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="first-team-title"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h2 id="first-team-title" className="text-xl font-bold text-slate-800">
+              Add your first team
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              This team will be the default home team for new games.
+            </p>
+            <form onSubmit={handleAddFirstTeam} className="mt-5">
+              <label htmlFor="first-team-name" className="mb-1 block text-sm font-medium text-slate-600">
+                Team name
+              </label>
+              <input
+                id="first-team-name"
+                type="text"
+                value={firstTeamName}
+                onChange={(event) => setFirstTeamName(event.target.value)}
+                autoFocus
+                required
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {teamError && <p className="mt-2 text-sm text-red-600" role="alert">{teamError}</p>}
+              <button
+                type="submit"
+                className="mt-4 w-full rounded-xl bg-blue-600 py-3 font-semibold text-white active:bg-blue-700"
+              >
+                Add team
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+
       <div className="mb-8">
         <div className="flex justify-end mb-2">
           <button
             onClick={onOpenConfig}
             className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 00-1.75.5l-.05.06h-3.4l-.05-.07a1.7 1.7 0 00-1.75-.5l-.08.03-2.94-1.7.02-.08a1.7 1.7 0 00-.5-1.75l-.06-.05v-3.4l.06-.05a1.7 1.7 0 00.5-1.75l-.02-.08 1.7-2.94.08.02a1.7 1.7 0 001.75-.5l.05-.06h3.4l.05.06a1.7 1.7 0 001.75.5l.08-.02 2.94 1.7-.02.08a1.7 1.7 0 00.5 1.75l.06.05v3.4l-.06.05z" />
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.28 7.28 0 0 0-1.63-.94l-.36-2.54A.49.49 0 0 0 13.88 2h-3.84a.49.49 0 0 0-.49.42L9.19 4.96c-.59.23-1.13.54-1.63.94l-2.39-.96a.49.49 0 0 0-.61.22L2.64 8.48a.5.5 0 0 0 .12.64L4.8 10.7c-.04.3-.07.63-.07.95 0 .32.02.64.07.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.12.21.37.29.61.22l2.39-.96c.5.39 1.05.71 1.63.94l.36 2.54c.05.24.25.42.49.42h3.84c.24 0 .44-.18.49-.42l.36-2.54c.59-.23 1.13-.54 1.63-.94l2.39.96c.23.09.49-.01.61-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" />
             </svg>
             Configuration
           </button>
@@ -63,12 +128,27 @@ export default function HomeScreen({ onNewGame, onViewGame, onOpenConfig, config
         </div>
       </div>
 
-      <button
-        onClick={onNewGame}
-        className="w-full py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl shadow-sm active:bg-blue-700 transition-colors mb-8"
-      >
-        New Game
-      </button>
+      <div className="mb-8 space-y-3">
+        <button
+          onClick={onNewGame}
+          className="w-full py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl shadow-sm active:bg-blue-700 transition-colors"
+        >
+          New Game
+        </button>
+
+        <button
+          onClick={onCreateReport}
+          disabled={config.teams.length < 2}
+          className="w-full py-4 bg-slate-800 text-white text-lg font-semibold rounded-xl shadow-sm active:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Create Report
+        </button>
+        {config.teams.length === 1 && (
+          <p className="text-center text-sm text-slate-500">
+            Add another team in Configuration to create a report.
+          </p>
+        )}
+      </div>
 
       {games.length > 0 && (
         <div>

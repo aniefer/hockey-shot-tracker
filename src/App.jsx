@@ -5,24 +5,41 @@ import NewGameSetup from './components/NewGameSetup';
 import GamePlay from './components/GamePlay';
 import GameSummary from './components/GameSummary';
 import ConfigScreen from './components/ConfigScreen';
+import CreateReportSetup from './components/CreateReportSetup';
 import { useGameState } from './hooks/useGameState';
-import { getGame, loadConfig, normalizeConfig, saveConfig } from './utils/storage';
+import { createHeadToHeadReport } from './utils/headToHeadReport';
+import { getGame, loadConfig, loadGames, normalizeConfig, saveConfig } from './utils/storage';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
   const [config, setConfig] = useState(loadConfig);
+  const [headToHeadReport, setHeadToHeadReport] = useState(null);
   const gameState = useGameState();
 
-  const handleNewGame = () => setScreen('setup');
+  const handleNewGame = () => {
+    setHeadToHeadReport(null);
+    setScreen('setup');
+  };
 
   const handleStartGame = (homeTeam, awayTeam, date) => {
+    setHeadToHeadReport(null);
     gameState.startGame(homeTeam, awayTeam, date);
     setScreen('play');
+  };
+
+  const handleCreateReport = (homeTeam, awayTeam) => {
+    const report = createHeadToHeadReport(loadGames(), homeTeam, awayTeam);
+    if (report.includedGames === 0) return false;
+
+    setHeadToHeadReport(report);
+    setScreen('summary');
+    return true;
   };
 
   const handleViewGame = (gameId) => {
     const g = getGame(gameId);
     if (g) {
+      setHeadToHeadReport(null);
       if (g.status === 'in_progress') {
         gameState.loadGame(g);
         setScreen('play');
@@ -39,6 +56,7 @@ export default function App() {
   };
 
   const handleBackHome = () => {
+    setHeadToHeadReport(null);
     setScreen('home');
   };
 
@@ -48,6 +66,29 @@ export default function App() {
     setConfig(updatedConfig);
   };
 
+  const handleAddTeam = (name) => {
+    const teamName = name.trim();
+    if (!teamName) return null;
+
+    const existingTeam = config.teams.find(
+      (team) => team.toLowerCase() === teamName.toLowerCase()
+    );
+    if (existingTeam) return existingTeam;
+
+    const updatedConfig = normalizeConfig({
+      ...config,
+      teams: [...config.teams, teamName],
+      defaultTeam: config.defaultTeam || teamName,
+    });
+    saveConfig(updatedConfig);
+    setConfig(updatedConfig);
+    return teamName;
+  };
+
+  const handleDeleteTeam = (teamName) => {
+    handleConfigChange('teams', config.teams.filter((team) => team !== teamName));
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       {screen === 'home' && (
@@ -55,19 +96,35 @@ export default function App() {
           onNewGame={handleNewGame}
           onViewGame={handleViewGame}
           onOpenConfig={() => setScreen('config')}
+          onCreateReport={() => setScreen('reportSetup')}
           config={config}
+          onAddTeam={handleAddTeam}
         />
       )}
       {screen === 'config' && (
         <ConfigScreen
           config={config}
           onChange={handleConfigChange}
+          onAddTeam={handleAddTeam}
+          onDeleteTeam={handleDeleteTeam}
           onBack={handleBackHome}
         />
       )}
       {screen === 'setup' && (
         <NewGameSetup
+          teams={config.teams}
+          defaultTeam={config.defaultTeam}
+          onCreateTeam={handleAddTeam}
           onStart={handleStartGame}
+          onBack={handleBackHome}
+        />
+      )}
+      {screen === 'reportSetup' && (
+        <CreateReportSetup
+          teams={config.teams}
+          games={loadGames()}
+          defaultTeam={config.defaultTeam}
+          onCreateReport={handleCreateReport}
           onBack={handleBackHome}
         />
       )}
@@ -78,9 +135,10 @@ export default function App() {
           config={config}
         />
       )}
-      {screen === 'summary' && gameState.game && (
+      {screen === 'summary' && (headToHeadReport || gameState.game) && (
         <GameSummary
-          game={gameState.game}
+          game={headToHeadReport?.game || gameState.game}
+          headToHead={headToHeadReport}
           onBack={handleBackHome}
           config={config}
         />

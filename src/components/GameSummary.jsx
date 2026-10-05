@@ -3,14 +3,17 @@ import ShotMap from './ShotMap';
 import MiniShotMap from './MiniShotMap';
 import Heatmap from './Heatmap';
 import ShotTimeline from './ShotTimeline';
+import GameMomentum from './GameMomentum';
 import ShotOutcomePie from './ShotOutcomePie';
 import { exportToPdf } from '../utils/pdfExport';
+import { isRinkFlipped, normalizeFullGameShots } from '../utils/rinkOrientation';
 import { getShotCounts } from '../utils/shotStats';
 
-export default function GameSummary({ game, onBack, config }) {
+export default function GameSummary({ game, headToHead, onBack, config }) {
   const [exporting, setExporting] = useState(false);
 
   const allShots = game.periods.flatMap((p) => p.shots);
+  const fullGameMapShots = normalizeFullGameShots(game.periods);
   const homeShots = allShots.filter((s) => s.team === 'home');
   const awayShots = allShots.filter((s) => s.team === 'away');
   const homeGoals = homeShots.filter((s) => s.result === 'goal').length;
@@ -20,7 +23,6 @@ export default function GameSummary({ game, onBack, config }) {
   const shotCounts = getShotCounts(allShots);
   const homeScoringChances = config.trackScoringChances ? shotCounts.homeScoringChances : 0;
   const awayScoringChances = config.trackScoringChances ? shotCounts.awayScoringChances : 0;
-
   const pct = (num, denom) => {
     if (denom === 0) return '-';
     return ((num / denom) * 100).toFixed(0) + '%';
@@ -60,7 +62,7 @@ export default function GameSummary({ game, onBack, config }) {
   // Zone analysis: classify shots as offensive/neutral/defensive relative to each team.
   // Standard hockey: P1 & P3 & OT: home attacks right. P2: home attacks left.
   const classifyZone = (x, team, periodNumber) => {
-    const homeAttacksRight = periodNumber !== 2;
+    const homeAttacksRight = !isRinkFlipped(periodNumber);
     const isLeft = x < 0.375;
     const isRight = x > 0.625;
 
@@ -196,15 +198,70 @@ export default function GameSummary({ game, onBack, config }) {
       </div>
 
       <div id="game-summary-report" className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-        {/* Game header */}
         <div className="text-center mb-6">
           <h1 className="text-xl font-bold text-slate-800 mb-1">
             {game.homeTeam} vs {game.awayTeam}
           </h1>
-          <p className="text-sm text-slate-500">
-            {formatDate(game.date)} at {formatTime(game.date)}
-          </p>
+          {headToHead ? (
+            <p className="text-sm text-slate-500">
+              {headToHead.includedGames} {headToHead.includedGames === 1 ? 'game' : 'games'}
+              {' included ('}
+              {headToHead.totalGames} completed
+              {') · '}
+              {formatDate(headToHead.firstDate)}
+              {headToHead.firstDate !== headToHead.lastDate && ` – ${formatDate(headToHead.lastDate)}`}
+            </p>
+          ) : (
+            <p className="text-sm text-slate-500">
+              {formatDate(game.date)} at {formatTime(game.date)}
+            </p>
+          )}
         </div>
+
+        {headToHead && (
+          <section className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
+              Completed Head-to-Head Record
+            </h2>
+            <div className="flex items-baseline justify-between gap-3 mb-3">
+              <div className="text-sm font-semibold text-blue-600">
+                {game.homeTeam}: {headToHead.homeWins} {headToHead.homeWins === 1 ? 'win' : 'wins'}
+              </div>
+              <div className="text-sm font-semibold text-red-500">
+                {game.awayTeam}: {headToHead.awayWins} {headToHead.awayWins === 1 ? 'win' : 'wins'}
+              </div>
+            </div>
+            {headToHead.totalGames > 0 ? (
+              <>
+                <div
+                  role="img"
+                  aria-label={`${game.homeTeam} won ${headToHead.homeWins} of ${headToHead.totalGames} completed games; ${game.awayTeam} won ${headToHead.awayWins}; ${headToHead.ties} tied`}
+                  className="flex h-5 overflow-hidden rounded-full bg-slate-200"
+                >
+                  <div
+                    className="h-full bg-blue-500"
+                    style={{ width: `${(headToHead.homeWins / headToHead.totalGames) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-red-500"
+                    style={{ width: `${(headToHead.awayWins / headToHead.totalGames) * 100}%` }}
+                  />
+                  <div
+                    className="h-full bg-slate-400"
+                    style={{ width: `${(headToHead.ties / headToHead.totalGames) * 100}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex flex-wrap justify-between gap-x-3 text-xs text-slate-500">
+                  <span>{game.homeTeam} {((headToHead.homeWins / headToHead.totalGames) * 100).toFixed(0)}%</span>
+                  <span>{headToHead.ties} {headToHead.ties === 1 ? 'tie' : 'ties'}</span>
+                  <span>{game.awayTeam} {((headToHead.awayWins / headToHead.totalGames) * 100).toFixed(0)}%</span>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-slate-500">No completed games yet.</p>
+            )}
+          </section>
+        )}
 
         {/* Score summary */}
         <div className="grid grid-cols-3 gap-4 mb-6">
@@ -217,7 +274,7 @@ export default function GameSummary({ game, onBack, config }) {
             )}
           </div>
           <div className="flex items-center justify-center">
-            <span className="text-slate-300 text-lg font-bold">FINAL</span>
+            <span className="text-slate-300 text-lg font-bold">{headToHead ? 'TOTAL' : 'FINAL'}</span>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-red-500">{awayGoals}</div>
@@ -340,8 +397,23 @@ export default function GameSummary({ game, onBack, config }) {
           </div>
         )}
 
-        {/* Shot momentum timeline */}
-        {allShots.length > 1 && (
+        {headToHead && (
+          <div className="mb-6">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+              Game Momentum
+            </h2>
+            {headToHead.gameMomentum.length > 0 ? (
+              <GameMomentum
+                games={headToHead.gameMomentum}
+                homeTeam={game.homeTeam}
+                awayTeam={game.awayTeam}
+              />
+            ) : (
+              <p className="text-sm text-slate-500">No completed games to chart yet.</p>
+            )}
+          </div>
+        )}
+        {!headToHead && allShots.length > 1 && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
               Shot Momentum
@@ -353,10 +425,10 @@ export default function GameSummary({ game, onBack, config }) {
         {/* Full-game shot map */}
         <div className="mb-6">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
-            Shot Map (Full Game)
+            {headToHead ? 'Shot Map (All Games)' : 'Shot Map (Full Game)'}
           </h2>
           <ShotMap
-            shots={allShots}
+            shots={fullGameMapShots}
             homeTeam={game.homeTeam}
             awayTeam={game.awayTeam}
             trackBlockedShots={config.trackBlockedShots}
@@ -368,7 +440,7 @@ export default function GameSummary({ game, onBack, config }) {
         {game.periods.length > 1 && config.reportShotMapsByPeriod !== false && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
-              Shot Maps by Period
+              {headToHead ? 'Shot Maps by Period (All Games)' : 'Shot Maps by Period'}
             </h2>
             <div className={`grid gap-3 ${
               config.reportShotMapsByPeriod === 'full'
@@ -421,7 +493,11 @@ export default function GameSummary({ game, onBack, config }) {
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
             Shot Density
           </h2>
-          <Heatmap shots={allShots} homeTeam={game.homeTeam} awayTeam={game.awayTeam} />
+          <Heatmap
+            shots={fullGameMapShots}
+            homeTeam={game.homeTeam}
+            awayTeam={game.awayTeam}
+          />
         </div>
 
         {/* Zone analysis */}

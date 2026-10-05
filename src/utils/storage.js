@@ -7,12 +7,28 @@ export const DEFAULT_CONFIG = {
   reportShotsByZone: true,
   reportShotOutcomeBreakdown: true,
   reportShotMapsByPeriod: 'mini',
+  teams: [],
+  defaultTeam: '',
 };
 
 export function normalizeConfig(config) {
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
-    return { ...DEFAULT_CONFIG };
+    return { ...DEFAULT_CONFIG, teams: [] };
   }
+
+  const teams = Array.isArray(config.teams)
+    ? config.teams.reduce((uniqueTeams, team) => {
+      if (typeof team !== 'string') return uniqueTeams;
+      const name = team.trim();
+      if (name && !uniqueTeams.some((existing) => existing.toLowerCase() === name.toLowerCase())) {
+        uniqueTeams.push(name);
+      }
+      return uniqueTeams;
+    }, [])
+    : [];
+  const defaultTeam = teams.includes(config.defaultTeam)
+    ? config.defaultTeam
+    : teams[0] || '';
 
   return {
     trackBlockedShots: typeof config.trackBlockedShots === 'boolean'
@@ -30,6 +46,8 @@ export function normalizeConfig(config) {
     reportShotMapsByPeriod: [false, 'mini', 'full'].includes(config.reportShotMapsByPeriod)
       ? config.reportShotMapsByPeriod
       : DEFAULT_CONFIG.reportShotMapsByPeriod,
+    teams,
+    defaultTeam,
   };
 }
 

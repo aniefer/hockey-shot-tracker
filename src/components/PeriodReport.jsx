@@ -1,4 +1,5 @@
 import MiniShotMap from './MiniShotMap';
+import { isRinkFlipped } from '../utils/rinkOrientation';
 import { getShotCounts } from '../utils/shotStats';
 
 export default function PeriodReport({ game, periodNumber, id, config }) {
@@ -58,7 +59,7 @@ export default function PeriodReport({ game, periodNumber, id, config }) {
 
   // Zone classification (same logic as GameSummary)
   const classifyZone = (x, team) => {
-    const homeAttacksRight = periodNumber !== 2;
+    const homeAttacksRight = !isRinkFlipped(periodNumber);
     const isLeft = x < 0.375;
     const isRight = x > 0.625;
     if (team === 'home') {

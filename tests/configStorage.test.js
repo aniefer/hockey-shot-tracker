@@ -28,6 +28,8 @@ describe('configuration storage', () => {
       reportShotsByZone: true,
       reportShotOutcomeBreakdown: true,
       reportShotMapsByPeriod: 'mini',
+      teams: [],
+      defaultTeam: '',
     });
   });
 
@@ -36,6 +38,8 @@ describe('configuration storage', () => {
       ...DEFAULT_CONFIG,
       trackBlockedShots: false,
       reportShotMapsByPeriod: 'full',
+      teams: ['Hawks', 'Wolves'],
+      defaultTeam: 'Wolves',
     };
 
     saveConfig(config);
@@ -51,6 +55,26 @@ describe('configuration storage', () => {
     })).toEqual({
       ...DEFAULT_CONFIG,
       trackScoringChances: false,
+    });
+  });
+
+  it('normalizes team names and falls back to the first team as default', () => {
+    expect(normalizeConfig({
+      teams: [' Hawks ', '', 'hawks', 'Wolves'],
+      defaultTeam: 'Missing',
+    })).toMatchObject({
+      teams: ['Hawks', 'Wolves'],
+      defaultTeam: 'Hawks',
+    });
+  });
+
+  it('preserves a configured default team', () => {
+    expect(normalizeConfig({
+      teams: ['Hawks', 'Wolves'],
+      defaultTeam: 'Wolves',
+    })).toMatchObject({
+      teams: ['Hawks', 'Wolves'],
+      defaultTeam: 'Wolves',
     });
   });
 });

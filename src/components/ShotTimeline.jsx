@@ -1,5 +1,4 @@
 export default function ShotTimeline({ periods, homeTeam, awayTeam }) {
-  // Build cumulative shot counts over time across all periods
   const events = [];
   let homeTotal = 0;
   let awayTotal = 0;
@@ -35,94 +34,99 @@ export default function ShotTimeline({ periods, homeTeam, awayTeam }) {
   const toYHome = (v) => padY + plotH - (v / maxShots) * plotH;
   const toYAway = (v) => padY + plotH - (v / maxShots) * plotH;
 
-  // Build SVG path strings
   let homePath = `M ${toX(0)} ${toYHome(events[0].home)}`;
   let awayPath = `M ${toX(0)} ${toYAway(events[0].away)}`;
-  events.forEach((e, i) => {
-    if (i === 0) return;
-    homePath += ` L ${toX(i)} ${toYHome(e.home)}`;
-    awayPath += ` L ${toX(i)} ${toYAway(e.away)}`;
+  events.forEach((event, index) => {
+    if (index === 0) return;
+    homePath += ` L ${toX(index)} ${toYHome(event.home)}`;
+    awayPath += ` L ${toX(index)} ${toYAway(event.away)}`;
   });
 
-  // Period divider positions
   const periodDividers = [];
-  let shotIdx = 0;
-  periods.forEach((period, pi) => {
-    shotIdx += period.shots.length;
-    if (pi < periods.length - 1 && shotIdx > 0 && shotIdx < events.length) {
-      periodDividers.push({ x: toX(shotIdx - 0.5), label: period.number });
+  let shotIndex = 0;
+  periods.forEach((period, periodIndex) => {
+    shotIndex += period.shots.length;
+    if (periodIndex < periods.length - 1 && shotIndex > 0 && shotIndex < events.length) {
+      periodDividers.push({ x: toX(shotIndex - 0.5), label: period.number });
     }
   });
 
-  // Y-axis labels
   const yTicks = [];
   const step = maxShots <= 5 ? 1 : maxShots <= 15 ? 5 : 10;
-  for (let v = 0; v <= maxShots; v += step) {
-    yTicks.push(v);
-  }
+  for (let value = 0; value <= maxShots; value += step) yTicks.push(value);
   if (!yTicks.includes(maxShots)) yTicks.push(maxShots);
 
-  // Goal markers
   const goalMarkers = events
-    .map((e, i) => ({ ...e, i }))
-    .filter((e) => e.isGoal && e.team);
+    .map((event, index) => ({ ...event, index }))
+    .filter((event) => event.isGoal && event.team);
 
   return (
     <div>
       <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
-        {/* Grid lines */}
-        {yTicks.map((v) => (
-          <g key={v}>
+        {yTicks.map((value) => (
+          <g key={value}>
             <line
-              x1={padX} y1={toYHome(v)} x2={chartW - padX} y2={toYHome(v)}
+              x1={padX} y1={toYHome(value)} x2={chartW - padX} y2={toYHome(value)}
               stroke="#e2e8f0" strokeWidth={0.5}
             />
-            <text x={padX - 4} y={toYHome(v) + 1.5} textAnchor="end" fontSize="6" fill="#94a3b8">
-              {v}
+            <text x={padX - 4} y={toYHome(value) + 1.5} textAnchor="end" fontSize="6" fill="#94a3b8">
+              {value}
             </text>
           </g>
         ))}
 
-        {/* Period dividers */}
-        {periodDividers.map((d) => (
-          <g key={d.label}>
-            <line x1={d.x} y1={padY} x2={d.x} y2={chartH - padY}
+        {periodDividers.map((divider) => (
+          <g key={divider.label}>
+            <line
+              x1={divider.x} y1={padY} x2={divider.x} y2={chartH - padY}
               stroke="#cbd5e1" strokeWidth={0.5} strokeDasharray="2 2"
             />
           </g>
         ))}
 
-        {/* Lines */}
         <path d={homePath} fill="none" stroke="#3b82f6" strokeWidth={1.5} />
         <path d={awayPath} fill="none" stroke="#ef4444" strokeWidth={1.5} />
 
-        {/* Goal markers */}
-        {goalMarkers.map((g, idx) => {
-          const x = toX(g.i);
-          const y = g.team === 'home' ? toYHome(g.home) : toYAway(g.away);
-          const color = g.team === 'home' ? '#3b82f6' : '#ef4444';
+        {goalMarkers.map((goal) => {
+          const x = toX(goal.index);
+          const y = goal.team === 'home' ? toYHome(goal.home) : toYAway(goal.away);
+          const color = goal.team === 'home' ? '#3b82f6' : '#ef4444';
           return (
-            <circle key={idx} cx={x} cy={y} r={2.5} fill={color} stroke="white" strokeWidth={0.8} />
+            <circle
+              key={goal.index}
+              cx={x}
+              cy={y}
+              r={2.5}
+              fill={color}
+              stroke="white"
+              strokeWidth={0.8}
+            />
           );
         })}
 
-        {/* Axis line */}
-        <line x1={padX} y1={chartH - padY} x2={chartW - padX} y2={chartH - padY}
+        <line
+          x1={padX} y1={chartH - padY} x2={chartW - padX} y2={chartH - padY}
           stroke="#cbd5e1" strokeWidth={0.5}
         />
       </svg>
 
       <div className="flex items-center justify-center gap-4 mt-1 text-xs text-slate-500">
         <span className="flex items-center gap-1">
-          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><line x1="0" y1="5" x2="10" y2="5" stroke="#3b82f6" strokeWidth="2" /></svg>
+          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10">
+            <line x1="0" y1="5" x2="10" y2="5" stroke="#3b82f6" strokeWidth="2" />
+          </svg>
           {homeTeam}
         </span>
         <span className="flex items-center gap-1">
-          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><line x1="0" y1="5" x2="10" y2="5" stroke="#ef4444" strokeWidth="2" /></svg>
+          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10">
+            <line x1="0" y1="5" x2="10" y2="5" stroke="#ef4444" strokeWidth="2" />
+          </svg>
           {awayTeam}
         </span>
         <span className="flex items-center gap-1">
-          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#64748b" /></svg>
+          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10">
+            <circle cx="5" cy="5" r="4" fill="#64748b" />
+          </svg>
           Goal scored
         </span>
       </div>

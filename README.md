@@ -10,13 +10,13 @@ No downloads, no accounts, no fees. Open the link on your phone, tablet, or comp
 
 ## What It Does
 
-Hockey Shot Tracker lets you record every shot on goal as it happens during a game, capturing where on the ice each shot came from. After the game, you get a full summary report with shot maps, heatmaps, save percentages, and player breakdowns you can use to review the game with your team.
+Hockey Shot Tracker lets you record every shot on goal as it happens during a game, capturing where on the ice each shot came from. Review individual games or create a head-to-head report that combines games between two teams, with shot maps, heatmaps, win records, and player breakdowns.
 
 ## How It Works
 
-### 1. Start a new game
+### 1. Set up teams and start a game
 
-Tap "New Game," enter the two team names, and you're ready to go. The date and time fill in automatically.
+On first launch, add a team name; it becomes the default home team. Manage teams and choose a different default in Configuration. To start a game, tap "New Game," choose home and away teams, or add a new team from the setup screen. Use "Flip home and away" to swap the selections. The date and time fill in automatically.
 
 <p align="center">
   <img src="docs/screenshots/home-screen.png" alt="Home screen with saved games" width="300" />
@@ -43,7 +43,7 @@ Other things you can do during the game:
 - **Period management** handles the full flow: 1st, 2nd, and 3rd periods, plus optional overtime for tournament games
 - The rink **flips orientation** between periods since teams switch ends (just like a real game)
 
-### 3. Review the game summary
+### 3. Review an individual game
 
 After the final period, tap "End & Save Game" and the app generates a full summary report:
 
@@ -55,14 +55,19 @@ After the final period, tap "End & Save Game" and the app generates a full summa
 - Shot location map showing every shot plotted on the rink (goals are filled circles, blocked shots are open circles, and scoring chances are diamonds)
 - Shot density heatmap you can filter by team
 - Per-player stats (shots and goals) for any players you tagged by number
+- Shot momentum timeline for the game
 
 <p align="center">
   <img src="docs/screenshots/summary-desktop.png" alt="Game summary report" width="700" />
 </p>
 
-### 4. Export and revisit
+### 4. Create a head-to-head report
 
-- **Export as PDF** to share with your coaching staff or email to parents
+Tap "Create Report" on the home screen and choose a first team. The second-team list is limited to teams with a saved game against the first team. The report combines shots from all saved matchups, including in-progress games; its win record and game momentum include completed games only. It also shows a win-share bar and aggregated shot maps and density.
+
+### 5. Export and revisit
+
+- **Export either report as PDF** to share with your coaching staff or email to parents
 - All games are **saved automatically** and show up on the home screen so you can revisit any past game's summary
 
 Here's a full example of an exported game report ([download the PDF](docs/HawksShotReport.pdf)):
@@ -82,7 +87,7 @@ Here's a full example of an exported game report ([download the PDF](docs/HawksS
 
 Your data stays on your device. The app saves games to your browser's local storage, which means no data is uploaded anywhere, no account is needed, and nobody else can see your games. The tradeoff is that if you clear your browser data or switch to a different device, your saved games won't carry over.
 
-Tracking options and report preferences are saved in local storage as well. Open Configuration from the home screen to change them.
+Team names, the default team, tracking options, and report preferences are saved in local storage as well. Open Configuration from the home screen to manage teams and change settings.
 
 ---
 
