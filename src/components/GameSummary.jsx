@@ -7,7 +7,7 @@ import ShotOutcomePie from './ShotOutcomePie';
 import { exportToPdf } from '../utils/pdfExport';
 import { getShotCounts } from '../utils/shotStats';
 
-export default function GameSummary({ game, onBack }) {
+export default function GameSummary({ game, onBack, config }) {
   const [exporting, setExporting] = useState(false);
 
   const allShots = game.periods.flatMap((p) => p.shots);
@@ -18,8 +18,8 @@ export default function GameSummary({ game, onBack }) {
   const homeBlocked = homeShots.filter((s) => s.result === 'blocked').length;
   const awayBlocked = awayShots.filter((s) => s.result === 'blocked').length;
   const shotCounts = getShotCounts(allShots);
-  const homeScoringChances = shotCounts.homeScoringChances;
-  const awayScoringChances = shotCounts.awayScoringChances;
+  const homeScoringChances = config.trackScoringChances ? shotCounts.homeScoringChances : 0;
+  const awayScoringChances = config.trackScoringChances ? shotCounts.awayScoringChances : 0;
 
   const pct = (num, denom) => {
     if (denom === 0) return '-';
@@ -134,8 +134,12 @@ export default function GameSummary({ game, onBack }) {
       awayGoals: away.filter((s) => s.result === 'goal').length,
       homeBlocked: home.filter((s) => s.result === 'blocked').length,
       awayBlocked: away.filter((s) => s.result === 'blocked').length,
-      homeScoringChances: home.filter((s) => s.result === 'scoring_chance').length,
-      awayScoringChances: away.filter((s) => s.result === 'scoring_chance').length,
+      homeScoringChances: config.trackScoringChances
+        ? home.filter((s) => s.result === 'scoring_chance').length
+        : 0,
+      awayScoringChances: config.trackScoringChances
+        ? away.filter((s) => s.result === 'scoring_chance').length
+        : 0,
     };
   };
 
@@ -208,7 +212,9 @@ export default function GameSummary({ game, onBack }) {
             <div className="text-3xl font-bold text-blue-600">{homeGoals}</div>
             <div className="text-sm font-semibold text-slate-600">{game.homeTeam}</div>
             <div className="text-xs text-slate-400">{homeShots.length} shots</div>
-            <div className="text-xs text-violet-600">{homeScoringChances} scoring chances</div>
+            {config.trackScoringChances && (
+              <div className="text-xs text-violet-600">{homeScoringChances} scoring chances</div>
+            )}
           </div>
           <div className="flex items-center justify-center">
             <span className="text-slate-300 text-lg font-bold">FINAL</span>
@@ -217,7 +223,9 @@ export default function GameSummary({ game, onBack }) {
             <div className="text-3xl font-bold text-red-500">{awayGoals}</div>
             <div className="text-sm font-semibold text-slate-600">{game.awayTeam}</div>
             <div className="text-xs text-slate-400">{awayShots.length} shots</div>
-            <div className="text-xs text-violet-600">{awayScoringChances} scoring chances</div>
+            {config.trackScoringChances && (
+              <div className="text-xs text-violet-600">{awayScoringChances} scoring chances</div>
+            )}
           </div>
         </div>
 
@@ -250,7 +258,7 @@ export default function GameSummary({ game, onBack }) {
                         {ps.homeGoals > 0 && (
                           <span className="text-emerald-600 text-xs ml-0.5">({ps.homeGoals}G)</span>
                         )}
-                        {ps.homeScoringChances > 0 && (
+                        {config.trackScoringChances && ps.homeScoringChances > 0 && (
                           <span className="text-violet-600 text-xs ml-0.5">({ps.homeScoringChances} SC)</span>
                         )}
                       </td>
@@ -268,7 +276,7 @@ export default function GameSummary({ game, onBack }) {
                         {ps.awayGoals > 0 && (
                           <span className="text-emerald-600 text-xs ml-0.5">({ps.awayGoals}G)</span>
                         )}
-                        {ps.awayScoringChances > 0 && (
+                        {config.trackScoringChances && ps.awayScoringChances > 0 && (
                           <span className="text-violet-600 text-xs ml-0.5">({ps.awayScoringChances} SC)</span>
                         )}
                       </td>
@@ -282,7 +290,7 @@ export default function GameSummary({ game, onBack }) {
         </div>
 
         {/* Key stats grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className={`grid grid-cols-2 ${config.trackBlockedShots ? 'sm:grid-cols-4' : 'sm:grid-cols-2'} gap-3 mb-6`}>
           <div className="bg-blue-50 rounded-xl p-3 text-center">
             <div className="text-xl font-bold text-blue-600">{pct(homeGoals, homeShots.length)}</div>
             <div className="text-xs text-slate-500">{game.homeTeam} shooting %</div>
@@ -291,30 +299,46 @@ export default function GameSummary({ game, onBack }) {
             <div className="text-xl font-bold text-red-500">{pct(awayGoals, awayShots.length)}</div>
             <div className="text-xs text-slate-500">{game.awayTeam} shooting %</div>
           </div>
-          <div className="bg-blue-50 rounded-xl p-3 text-center">
-            <div className="text-xl font-bold text-blue-600">
-              {pct(awayBlocked, awayShots.length)}
-            </div>
-            <div className="text-xs text-slate-500">{game.homeTeam} save %</div>
-          </div>
-          <div className="bg-red-50 rounded-xl p-3 text-center">
-            <div className="text-xl font-bold text-red-500">
-              {pct(homeBlocked, homeShots.length)}
-            </div>
-            <div className="text-xs text-slate-500">{game.awayTeam} save %</div>
-          </div>
+          {config.trackBlockedShots && (
+            <>
+              <div className="bg-blue-50 rounded-xl p-3 text-center">
+                <div className="text-xl font-bold text-blue-600">
+                  {pct(awayBlocked, awayShots.length)}
+                </div>
+                <div className="text-xs text-slate-500">{game.homeTeam} save %</div>
+              </div>
+              <div className="bg-red-50 rounded-xl p-3 text-center">
+                <div className="text-xl font-bold text-red-500">
+                  {pct(homeBlocked, homeShots.length)}
+                </div>
+                <div className="text-xs text-slate-500">{game.awayTeam} save %</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Shot outcome breakdown */}
-        <div className="mb-6">
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
-            Shot Outcome Breakdown
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <ShotOutcomePie teamName={game.homeTeam} shots={homeShots} />
-            <ShotOutcomePie teamName={game.awayTeam} shots={awayShots} />
+        {config.reportShotOutcomeBreakdown && (
+          <div className="mb-6">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+              Shot Outcome Breakdown
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <ShotOutcomePie
+                teamName={game.homeTeam}
+                shots={homeShots}
+                trackBlockedShots={config.trackBlockedShots}
+                trackScoringChances={config.trackScoringChances}
+              />
+              <ShotOutcomePie
+                teamName={game.awayTeam}
+                shots={awayShots}
+                trackBlockedShots={config.trackBlockedShots}
+                trackScoringChances={config.trackScoringChances}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Shot momentum timeline */}
         {allShots.length > 1 && (
@@ -331,28 +355,52 @@ export default function GameSummary({ game, onBack }) {
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
             Shot Map (Full Game)
           </h2>
-          <ShotMap shots={allShots} homeTeam={game.homeTeam} awayTeam={game.awayTeam} />
+          <ShotMap
+            shots={allShots}
+            homeTeam={game.homeTeam}
+            awayTeam={game.awayTeam}
+            trackBlockedShots={config.trackBlockedShots}
+            trackScoringChances={config.trackScoringChances}
+          />
         </div>
 
         {/* Per-period shot maps */}
-        {game.periods.length > 1 && (
+        {game.periods.length > 1 && config.reportShotMapsByPeriod !== false && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
               Shot Maps by Period
             </h2>
-            <div className={`grid gap-3 ${game.periods.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
+            <div className={`grid gap-3 ${
+              config.reportShotMapsByPeriod === 'full'
+                ? 'grid-cols-1'
+                : game.periods.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+            }`}>
               {game.periods.map((p) => {
                 const ps = periodStats(p);
                 return (
-                  <div key={p.number} className="bg-slate-50 rounded-xl p-3">
+                  <div
+                    key={p.number}
+                    className={config.reportShotMapsByPeriod === 'full' ? '' : 'bg-slate-50 rounded-xl p-3'}
+                  >
                     <div className="text-xs font-semibold text-slate-600 text-center mb-1">
                       {periodLabelLong(p.number)}
                     </div>
-                    <MiniShotMap
-                      shots={p.shots}
-                      homeTeam={game.homeTeam}
-                      awayTeam={game.awayTeam}
-                    />
+                    {config.reportShotMapsByPeriod === 'full' ? (
+                      <ShotMap
+                        shots={p.shots}
+                        homeTeam={game.homeTeam}
+                        awayTeam={game.awayTeam}
+                        trackBlockedShots={config.trackBlockedShots}
+                        trackScoringChances={config.trackScoringChances}
+                      />
+                    ) : (
+                      <MiniShotMap
+                        shots={p.shots}
+                        homeTeam={game.homeTeam}
+                        awayTeam={game.awayTeam}
+                        trackScoringChances={config.trackScoringChances}
+                      />
+                    )}
                     <div className="flex justify-center gap-4 mt-1.5 text-xs text-slate-500">
                       <span className="text-blue-600 font-semibold">
                         {ps.homeShots.length}S {ps.homeGoals > 0 && `/ ${ps.homeGoals}G`}
@@ -377,7 +425,7 @@ export default function GameSummary({ game, onBack }) {
         </div>
 
         {/* Zone analysis */}
-        {(homeShots.length > 0 || awayShots.length > 0) && (
+        {config.reportShotsByZone && (homeShots.length > 0 || awayShots.length > 0) && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
               Shots by Zone

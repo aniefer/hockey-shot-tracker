@@ -7,7 +7,7 @@ import PeriodReport from './PeriodReport';
 import { exportToPdf } from '../utils/pdfExport';
 import { getDefaultShotTeam } from '../utils/defaultShotTeam';
 
-export default function GamePlay({ gameState, onEndGame }) {
+export default function GamePlay({ gameState, onEndGame, config }) {
   const {
     game,
     currentPeriod,
@@ -125,14 +125,16 @@ export default function GamePlay({ gameState, onEndGame }) {
             </>
           )}
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 text-xs mt-1">
-          <span className="text-blue-600 font-semibold">
-            {game.homeTeam}: {shotCounts.homeScoringChances} scoring chances
-          </span>
-          <span className="text-red-500 font-semibold">
-            {game.awayTeam}: {shotCounts.awayScoringChances} scoring chances
-          </span>
-        </div>
+        {config.trackScoringChances && (
+          <div className="flex flex-wrap items-center justify-center gap-x-4 text-xs mt-1">
+            <span className="text-blue-600 font-semibold">
+              {game.homeTeam}: {shotCounts.homeScoringChances} scoring chances
+            </span>
+            <span className="text-red-500 font-semibold">
+              {game.awayTeam}: {shotCounts.awayScoringChances} scoring chances
+            </span>
+          </div>
+        )}
         <div className="flex justify-end mt-2">
           <button
             type="button"
@@ -299,6 +301,8 @@ export default function GamePlay({ gameState, onEndGame }) {
           initialTeam={pendingShot.initialTeam}
           homeTeam={game.homeTeam}
           awayTeam={game.awayTeam}
+          trackBlockedShots={config.trackBlockedShots}
+          trackScoringChances={config.trackScoringChances}
           onConfirm={handleConfirmShot}
           onCancel={handleCancelShot}
         />
@@ -310,6 +314,8 @@ export default function GamePlay({ gameState, onEndGame }) {
           periods={game.periods}
           currentPeriod={currentPeriod}
           orientation={rinkOrientation}
+          trackBlockedShots={config.trackBlockedShots}
+          trackScoringChances={config.trackScoringChances}
           homeTeam={game.homeTeam}
           awayTeam={game.awayTeam}
           onClose={() => setShowOverlay(false)}
@@ -323,6 +329,7 @@ export default function GamePlay({ gameState, onEndGame }) {
             id="period-report"
             game={game}
             periodNumber={lastCompletedPeriod.number}
+            config={config}
           />
         </div>
       )}

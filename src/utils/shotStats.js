@@ -11,12 +11,15 @@ export function getShotCounts(shots) {
   };
 }
 
-export function getShotOutcomeCounts(shots) {
+export function getShotOutcomeCounts(
+  shots,
+  { trackBlockedShots = true, trackScoringChances = true } = {}
+) {
   return shots.reduce(
     (counts, shot) => {
       if (shot.result === 'goal') counts.goals++;
-      else if (shot.result === 'blocked') counts.blocked++;
-      else if (shot.result === 'scoring_chance') counts.scoringChances++;
+      else if (shot.result === 'blocked' && trackBlockedShots) counts.blocked++;
+      else if (shot.result === 'scoring_chance' && trackScoringChances) counts.scoringChances++;
       else counts.regularShots++;
       return counts;
     },

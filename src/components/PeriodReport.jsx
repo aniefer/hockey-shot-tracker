@@ -1,7 +1,7 @@
 import MiniShotMap from './MiniShotMap';
 import { getShotCounts } from '../utils/shotStats';
 
-export default function PeriodReport({ game, periodNumber, id }) {
+export default function PeriodReport({ game, periodNumber, id, config }) {
   const period = game.periods.find((p) => p.number === periodNumber);
   if (!period) return null;
 
@@ -13,8 +13,8 @@ export default function PeriodReport({ game, periodNumber, id }) {
   const homeBlocked = homeShots.filter((s) => s.result === 'blocked').length;
   const awayBlocked = awayShots.filter((s) => s.result === 'blocked').length;
   const periodShotCounts = getShotCounts(shots);
-  const homeScoringChances = periodShotCounts.homeScoringChances;
-  const awayScoringChances = periodShotCounts.awayScoringChances;
+  const homeScoringChances = config.trackScoringChances ? periodShotCounts.homeScoringChances : 0;
+  const awayScoringChances = config.trackScoringChances ? periodShotCounts.awayScoringChances : 0;
 
   const pct = (num, denom) => {
     if (denom === 0) return '-';
@@ -104,8 +104,12 @@ export default function PeriodReport({ game, periodNumber, id }) {
   const cumulativeHomeGoals = cumulativeHome.filter((s) => s.result === 'goal').length;
   const cumulativeAwayGoals = cumulativeAway.filter((s) => s.result === 'goal').length;
   const cumulativeShotCounts = getShotCounts(cumulativeShots);
-  const cumulativeHomeScoringChances = cumulativeShotCounts.homeScoringChances;
-  const cumulativeAwayScoringChances = cumulativeShotCounts.awayScoringChances;
+  const cumulativeHomeScoringChances = config.trackScoringChances
+    ? cumulativeShotCounts.homeScoringChances
+    : 0;
+  const cumulativeAwayScoringChances = config.trackScoringChances
+    ? cumulativeShotCounts.awayScoringChances
+    : 0;
 
   // All goals sorted chronologically
   const allGoals = [
@@ -157,8 +161,12 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <th className="text-left py-1.5 pr-3 font-semibold text-slate-600">Team</th>
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Shots</th>
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Goals</th>
-              <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Blocked</th>
-              <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Scoring Chances</th>
+              {config.trackBlockedShots && (
+                <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Blocked</th>
+              )}
+              {config.trackScoringChances && (
+                <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Scoring Chances</th>
+              )}
               <th className="text-center py-1.5 px-2 font-semibold text-slate-600">Sh%</th>
             </tr>
           </thead>
@@ -167,16 +175,24 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <td className="py-1.5 pr-3 font-medium text-blue-600">{game.homeTeam}</td>
               <td className="text-center py-1.5 px-2 text-blue-600">{homeShots.length}</td>
               <td className="text-center py-1.5 px-2 font-semibold text-blue-600">{homeGoals.length}</td>
-              <td className="text-center py-1.5 px-2 text-blue-600">{homeBlocked}</td>
-              <td className="text-center py-1.5 px-2 text-violet-600">{homeScoringChances}</td>
+              {config.trackBlockedShots && (
+                <td className="text-center py-1.5 px-2 text-blue-600">{homeBlocked}</td>
+              )}
+              {config.trackScoringChances && (
+                <td className="text-center py-1.5 px-2 text-violet-600">{homeScoringChances}</td>
+              )}
               <td className="text-center py-1.5 px-2 text-blue-600">{pct(homeGoals.length, homeShots.length)}</td>
             </tr>
             <tr>
               <td className="py-1.5 pr-3 font-medium text-red-500">{game.awayTeam}</td>
               <td className="text-center py-1.5 px-2 text-red-500">{awayShots.length}</td>
               <td className="text-center py-1.5 px-2 font-semibold text-red-500">{awayGoals.length}</td>
-              <td className="text-center py-1.5 px-2 text-red-500">{awayBlocked}</td>
-              <td className="text-center py-1.5 px-2 text-violet-600">{awayScoringChances}</td>
+              {config.trackBlockedShots && (
+                <td className="text-center py-1.5 px-2 text-red-500">{awayBlocked}</td>
+              )}
+              {config.trackScoringChances && (
+                <td className="text-center py-1.5 px-2 text-violet-600">{awayScoringChances}</td>
+              )}
               <td className="text-center py-1.5 px-2 text-red-500">{pct(awayGoals.length, awayShots.length)}</td>
             </tr>
           </tbody>
@@ -213,7 +229,12 @@ export default function PeriodReport({ game, periodNumber, id }) {
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">
             Shot Map
           </h2>
-          <MiniShotMap shots={shots} homeTeam={game.homeTeam} awayTeam={game.awayTeam} />
+          <MiniShotMap
+            shots={shots}
+            homeTeam={game.homeTeam}
+            awayTeam={game.awayTeam}
+            trackScoringChances={config.trackScoringChances}
+          />
           <div className="flex justify-center gap-4 mt-1 text-xs">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
@@ -223,13 +244,16 @@ export default function PeriodReport({ game, periodNumber, id }) {
               <span className="w-2 h-2 rounded-full bg-red-500 inline-block" />
               <span className="text-red-500 font-medium">{game.awayTeam}</span>
             </span>
-            <span className="text-slate-400">● goal / ○ blocked / ◆ scoring chance</span>
+            <span className="text-slate-400">
+              ● goal / {config.trackBlockedShots ? '○ blocked / regular shots' : '○ regular shots'}
+              {config.trackScoringChances && ' / ◆ scoring chance'}
+            </span>
           </div>
         </div>
       )}
 
       {/* Zone breakdown */}
-      {(homeShots.length > 0 || awayShots.length > 0) && (
+      {config.reportShotsByZone && (homeShots.length > 0 || awayShots.length > 0) && (
         <div className="mb-4">
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             Shots by Zone
@@ -268,13 +292,15 @@ export default function PeriodReport({ game, periodNumber, id }) {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="bg-blue-50 rounded-lg p-2.5 text-center">
               <div className="font-bold text-blue-600">
-                {cumulativeHome.length} shots / {cumulativeHomeGoals}G / {cumulativeHomeScoringChances} SC
+                {cumulativeHome.length} shots / {cumulativeHomeGoals}G
+                {config.trackScoringChances && ` / ${cumulativeHomeScoringChances} SC`}
               </div>
               <div className="text-xs text-slate-500">{game.homeTeam}</div>
             </div>
             <div className="bg-red-50 rounded-lg p-2.5 text-center">
               <div className="font-bold text-red-500">
-                {cumulativeAway.length} shots / {cumulativeAwayGoals}G / {cumulativeAwayScoringChances} SC
+                {cumulativeAway.length} shots / {cumulativeAwayGoals}G
+                {config.trackScoringChances && ` / ${cumulativeAwayScoringChances} SC`}
               </div>
               <div className="text-xs text-slate-500">{game.awayTeam}</div>
             </div>

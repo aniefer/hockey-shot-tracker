@@ -1,6 +1,16 @@
 import { useState } from 'react';
 
-export default function ShotPopup({ x, y, initialTeam, homeTeam, awayTeam, onConfirm, onCancel }) {
+export default function ShotPopup({
+  x,
+  y,
+  initialTeam,
+  homeTeam,
+  awayTeam,
+  trackBlockedShots = true,
+  trackScoringChances = true,
+  onConfirm,
+  onCancel,
+}) {
   const [team, setTeam] = useState(initialTeam);
   const [result, setResult] = useState(null);
   const [playerNumber, setPlayerNumber] = useState('');
@@ -58,17 +68,21 @@ export default function ShotPopup({ x, y, initialTeam, homeTeam, awayTeam, onCon
             <ToggleButton active={result === 'goal'} onClick={() => setResult(result === 'goal' ? null : 'goal')} color="green">
               Goal
             </ToggleButton>
-            <ToggleButton active={result === 'blocked'} onClick={() => setResult(result === 'blocked' ? null : 'blocked')} color="amber">
-              Blocked
-            </ToggleButton>
-            <ToggleButton
-              active={result === 'scoring_chance'}
-              onClick={() => setResult(result === 'scoring_chance' ? null : 'scoring_chance')}
-              color="purple"
-              compact
-            >
-              Scoring Chance
-            </ToggleButton>
+            {trackBlockedShots && (
+              <ToggleButton active={result === 'blocked'} onClick={() => setResult(result === 'blocked' ? null : 'blocked')} color="amber">
+                Blocked
+              </ToggleButton>
+            )}
+            {trackScoringChances && (
+              <ToggleButton
+                active={result === 'scoring_chance'}
+                onClick={() => setResult(result === 'scoring_chance' ? null : 'scoring_chance')}
+                color="purple"
+                compact
+              >
+                Scoring Chance
+              </ToggleButton>
+            )}
           </div>
         </div>
 

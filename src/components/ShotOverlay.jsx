@@ -5,6 +5,8 @@ export default function ShotOverlay({
   periods,
   currentPeriod,
   orientation = 'landscape',
+  trackBlockedShots = true,
+  trackScoringChances = true,
   homeTeam,
   awayTeam,
   onClose,
@@ -24,6 +26,7 @@ export default function ShotOverlay({
     ? allShots
     : periods.find((p) => String(p.number) === String(selectedPeriod))?.shots || [];
   const isPortrait = orientation === 'portrait';
+  const openShotLabel = trackBlockedShots ? 'Blocked / Regular' : 'Regular Shots';
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -78,7 +81,7 @@ export default function ShotOverlay({
               const cx = shot.x * 200;
               const cy = shot.y * 85;
               const isGoal = shot.result === 'goal';
-              const isScoringChance = shot.result === 'scoring_chance';
+              const isScoringChance = trackScoringChances && shot.result === 'scoring_chance';
               const isHome = shot.team === 'home';
               const isAway = shot.team === 'away';
               const color = isHome ? '#3b82f6' : isAway ? '#ef4444' : '#94a3b8';
@@ -141,29 +144,31 @@ export default function ShotOverlay({
               <svg className="w-3 h-3" viewBox="0 0 12 12">
                 <circle cx="6" cy="6" r="4" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
               </svg>
-              {homeTeam} Blocked
+              {homeTeam} {openShotLabel}
             </span>
             <span className="flex items-center gap-1.5">
               <svg className="w-3 h-3" viewBox="0 0 12 12">
                 <circle cx="6" cy="6" r="4" fill="none" stroke="#ef4444" strokeWidth="1.5" />
               </svg>
-              {awayTeam} Blocked
+              {awayTeam} {openShotLabel}
             </span>
           </div>
-          <div className="flex items-center justify-center gap-5 text-xs text-slate-600">
-            <span className="flex items-center gap-1.5">
-              <svg className="w-3 h-3" viewBox="0 0 12 12">
-                <polygon points="6,1 11,6 6,11 1,6" fill="white" stroke="#3b82f6" strokeWidth="1.5" />
-              </svg>
-              {homeTeam} Scoring Chance
-            </span>
-            <span className="flex items-center gap-1.5">
-              <svg className="w-3 h-3" viewBox="0 0 12 12">
-                <polygon points="6,1 11,6 6,11 1,6" fill="white" stroke="#ef4444" strokeWidth="1.5" />
-              </svg>
-              {awayTeam} Scoring Chance
-            </span>
-          </div>
+          {trackScoringChances && (
+            <div className="flex items-center justify-center gap-5 text-xs text-slate-600">
+              <span className="flex items-center gap-1.5">
+                <svg className="w-3 h-3" viewBox="0 0 12 12">
+                  <polygon points="6,1 11,6 6,11 1,6" fill="white" stroke="#3b82f6" strokeWidth="1.5" />
+                </svg>
+                {homeTeam} Scoring Chance
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg className="w-3 h-3" viewBox="0 0 12 12">
+                  <polygon points="6,1 11,6 6,11 1,6" fill="white" stroke="#ef4444" strokeWidth="1.5" />
+                </svg>
+                {awayTeam} Scoring Chance
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

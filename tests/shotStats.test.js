@@ -48,5 +48,23 @@ describe('getShotCounts', () => {
       });
       expect(Object.values(outcomeCounts).reduce((total, count) => total + count, 0)).toBe(shots.length);
     });
+
+    it('reclassifies disabled outcome tracking as regular shots', () => {
+      const shots = [
+        { result: 'blocked' },
+        { result: 'scoring_chance' },
+        { result: null },
+      ];
+
+      expect(getShotOutcomeCounts(shots, {
+        trackBlockedShots: false,
+        trackScoringChances: false,
+      })).toEqual({
+        goals: 0,
+        blocked: 0,
+        scoringChances: 0,
+        regularShots: 3,
+      });
+    });
   });
 });

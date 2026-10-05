@@ -82,6 +82,8 @@ Here's a full example of an exported game report ([download the PDF](docs/HawksS
 
 Your data stays on your device. The app saves games to your browser's local storage, which means no data is uploaded anywhere, no account is needed, and nobody else can see your games. The tradeoff is that if you clear your browser data or switch to a different device, your saved games won't carry over.
 
+Tracking options and report preferences are saved in local storage as well. Open Configuration from the home screen to change them.
+
 ---
 
 ## Technical Details

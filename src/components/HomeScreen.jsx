@@ -1,7 +1,7 @@
 import { useStorage } from '../hooks/useStorage';
 import { getShotCounts } from '../utils/shotStats';
 
-export default function HomeScreen({ onNewGame, onViewGame }) {
+export default function HomeScreen({ onNewGame, onViewGame, onOpenConfig, config }) {
   const { games, deleteGame } = useStorage();
 
   const formatDate = (iso) => {
@@ -44,9 +44,23 @@ export default function HomeScreen({ onNewGame, onViewGame }) {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 mb-1">Hockey Shot Tracker</h1>
-        <p className="text-sm text-slate-500">Track shots on goal during youth hockey games</p>
+      <div className="mb-8">
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={onOpenConfig}
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 00-1.75.5l-.05.06h-3.4l-.05-.07a1.7 1.7 0 00-1.75-.5l-.08.03-2.94-1.7.02-.08a1.7 1.7 0 00-.5-1.75l-.06-.05v-3.4l.06-.05a1.7 1.7 0 00.5-1.75l-.02-.08 1.7-2.94.08.02a1.7 1.7 0 001.75-.5l.05-.06h3.4l.05.06a1.7 1.7 0 001.75.5l.08-.02 2.94 1.7-.02.08a1.7 1.7 0 00.5 1.75l.06.05v3.4l-.06.05z" />
+            </svg>
+            Configuration
+          </button>
+        </div>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-800 mb-1">Hockey Shot Tracker</h1>
+          <p className="text-sm text-slate-500">Track shots on goal during youth hockey games</p>
+        </div>
       </div>
 
       <button
@@ -92,9 +106,11 @@ export default function HomeScreen({ onNewGame, onViewGame }) {
                         <>{getTotalShots(game)} shot{getTotalShots(game) !== 1 ? 's' : ''} recorded</>
                       )}
                     </div>
-                    <div className="text-xs text-violet-600 mt-1">
-                      Scoring chances: {game.homeTeam} {getScoringChances(game, 'home')} / {game.awayTeam} {getScoringChances(game, 'away')}
-                    </div>
+                    {config.trackScoringChances && (
+                      <div className="text-xs text-violet-600 mt-1">
+                        Scoring chances: {game.homeTeam} {getScoringChances(game, 'home')} / {game.awayTeam} {getScoringChances(game, 'away')}
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={(e) => handleDelete(e, game.id)}

@@ -1,6 +1,14 @@
 import HockeyRink from './HockeyRink';
 
-export default function ShotMap({ shots, homeTeam, awayTeam }) {
+export default function ShotMap({
+  shots,
+  homeTeam,
+  awayTeam,
+  trackBlockedShots = true,
+  trackScoringChances = true,
+}) {
+  const openShotLabel = trackBlockedShots ? 'blocked / regular shots' : 'regular shots';
+
   return (
     <div>
       <HockeyRink>
@@ -8,7 +16,7 @@ export default function ShotMap({ shots, homeTeam, awayTeam }) {
           const cx = shot.x * 200;
           const cy = shot.y * 85;
           const isGoal = shot.result === 'goal';
-          const isScoringChance = shot.result === 'scoring_chance';
+          const isScoringChance = trackScoringChances && shot.result === 'scoring_chance';
           const isHome = shot.team === 'home';
           const isAway = shot.team === 'away';
           const color = isHome ? '#3b82f6' : isAway ? '#ef4444' : '#94a3b8';
@@ -52,24 +60,28 @@ export default function ShotMap({ shots, homeTeam, awayTeam }) {
         </span>
         <span className="flex items-center gap-1">
           <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="#3b82f6" strokeWidth="1" /></svg>
-          {homeTeam} blocked
+          {homeTeam} {openShotLabel}
         </span>
-        <span className="flex items-center gap-1">
-          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><polygon points="5,1 9,5 5,9 1,5" fill="white" stroke="#3b82f6" strokeWidth="1" /></svg>
-          {homeTeam} scoring chance
-        </span>
+        {trackScoringChances && (
+          <span className="flex items-center gap-1">
+            <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><polygon points="5,1 9,5 5,9 1,5" fill="white" stroke="#3b82f6" strokeWidth="1" /></svg>
+            {homeTeam} scoring chance
+          </span>
+        )}
         <span className="flex items-center gap-1">
           <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#ef4444" /></svg>
           {awayTeam} goal
         </span>
         <span className="flex items-center gap-1">
           <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.5" fill="none" stroke="#ef4444" strokeWidth="1" /></svg>
-          {awayTeam} blocked
+          {awayTeam} {openShotLabel}
         </span>
-        <span className="flex items-center gap-1">
-          <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><polygon points="5,1 9,5 5,9 1,5" fill="white" stroke="#ef4444" strokeWidth="1" /></svg>
-          {awayTeam} scoring chance
-        </span>
+        {trackScoringChances && (
+          <span className="flex items-center gap-1">
+            <svg className="w-2.5 h-2.5" viewBox="0 0 10 10"><polygon points="5,1 9,5 5,9 1,5" fill="white" stroke="#ef4444" strokeWidth="1" /></svg>
+            {awayTeam} scoring chance
+          </span>
+        )}
       </div>
     </div>
   );

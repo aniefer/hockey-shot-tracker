@@ -1,6 +1,12 @@
 import HockeyRink from './HockeyRink';
 
-export default function MiniShotMap({ shots, homeTeam, awayTeam, label }) {
+export default function MiniShotMap({
+  shots,
+  homeTeam,
+  awayTeam,
+  label,
+  trackScoringChances = true,
+}) {
   return (
     <div>
       {label && (
@@ -11,7 +17,7 @@ export default function MiniShotMap({ shots, homeTeam, awayTeam, label }) {
           const cx = shot.x * 200;
           const cy = shot.y * 85;
           const isGoal = shot.result === 'goal';
-          const isScoringChance = shot.result === 'scoring_chance';
+          const isScoringChance = trackScoringChances && shot.result === 'scoring_chance';
           const isHome = shot.team === 'home';
           const isAway = shot.team === 'away';
           const color = isHome ? '#3b82f6' : isAway ? '#ef4444' : '#94a3b8';
