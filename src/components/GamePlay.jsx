@@ -8,6 +8,14 @@ import { exportToPdf } from '../utils/pdfExport';
 import { getDefaultShotTeam } from '../utils/defaultShotTeam';
 import { isRinkFlipped } from '../utils/rinkOrientation';
 
+function getDeviceOrientation() {
+  return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+}
+
+function getDeviceOrientationAngle() {
+  return window.screen?.orientation?.angle ?? (window.innerWidth >= window.innerHeight ? 90 : 0);
+}
+
 export default function GamePlay({ gameState, onEndGame, onExportGameData, config }) {
   const {
     game,
@@ -28,7 +36,33 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
   const [exportingGameData, setExportingGameData] = useState(false);
   const [exportGameDataError, setExportGameDataError] = useState('');
   const [rinkOrientation, setRinkOrientation] = useState('landscape');
+  const [maximized, setMaximized] = useState(false);
+  const [deviceOrientation, setDeviceOrientation] = useState('landscape');
+  const [deviceOrientationAngle, setDeviceOrientationAngle] = useState(0);
   const isPortrait = rinkOrientation === 'portrait';
+
+  const handleMaximize = () => {
+    setRinkOrientation(getDeviceOrientation());
+    setMaximized(true);
+  };
+
+  useEffect(() => {
+    const updateOrientation = () => {
+      setDeviceOrientation(getDeviceOrientation());
+      setDeviceOrientationAngle(getDeviceOrientationAngle());
+      if (maximized) setRinkOrientation(getDeviceOrientation());
+    };
+
+    window.addEventListener('resize', updateOrientation);
+    window.addEventListener('orientationchange', updateOrientation);
+    updateOrientation();
+    return () => {
+      window.removeEventListener('resize', updateOrientation);
+      window.removeEventListener('orientationchange', updateOrientation);
+    };
+  }, [maximized]);
+
+  const textRotationClass = deviceOrientationAngle === 90 ? 'rotate-90' : '-rotate-90';
 
   // Rink flips for period 2
   const flipped = isRinkFlipped(currentPeriod);
@@ -108,9 +142,12 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-3 py-4 flex flex-col min-h-screen">
+    <div className={maximized
+      ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-slate-900 p-2'
+      : 'max-w-2xl mx-auto px-3 py-4 flex flex-col min-h-screen'}
+    >
       {/* Header */}
-      <div className="mb-3">
+      <div className={maximized ? 'hidden' : 'mb-3'}>
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-lg font-bold text-slate-800 truncate">
             {game.homeTeam} vs {game.awayTeam}
@@ -172,6 +209,17 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
               <path strokeLinecap="round" strokeLinejoin="round" d="M5.8 8.3a7.4 7.4 0 0 1 12.6-3.1M16 4.5l2.5.7-.1 2.6M18.2 15.7a7.4 7.4 0 0 1-12.6 3.1M8 19.5l-2.5-.7.1-2.6" />
             </svg>
           </button>
+          <button
+            type="button"
+            onClick={handleMaximize}
+            aria-label="Maximize rink"
+            title="Maximize rink"
+            className="p-2 bg-slate-100 text-slate-600 rounded-lg active:bg-slate-200 transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 3H3v5M3 3l6 6M16 3h5v5M21 3l-6 6M8 21H3v-5M3 21l6-6M16 21h5v-5M21 21l-6-6" />
+            </svg>
+          </button>
         </div>
         {exportGameDataError && (
           <p className="mt-1 text-right text-xs text-red-600" role="alert">{exportGameDataError}</p>
@@ -179,10 +227,14 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
       </div>
 
       {/* Rink */}
-      <div className="flex-1 flex items-center justify-center mb-3">
-        <div className={`${isPortrait ? 'w-fit' : 'w-full'} relative`}>
+      <div className={maximized
+        ? 'min-h-0 flex-1 flex items-center justify-center pl-10'
+        : 'flex-1 flex items-center justify-center mb-3'}
+      >
+        <div className={`${isPortrait ? 'w-fit' : 'w-full'} ${maximized ? 'h-full max-w-full' : ''} relative`}>
           <HockeyRink
             orientation={rinkOrientation}
+            maximized={maximized}
             onTapRink={currentPeriod !== null ? handleTapRink : null}
           >
             {/* Prompt when no period is active */}
@@ -263,28 +315,52 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
       </div>
 
       {/* Action buttons */}
-      <div className="space-y-3 pb-4">
+      <div className={maximized
+        ? 'absolute left-0 top-0 bottom-0 z-10 flex w-10 flex-col items-center justify-center gap-1 bg-white/95 py-2'
+        : 'space-y-3 pb-4'}
+      >
+        {maximized && (
+          <button
+            type="button"
+            onClick={() => setMaximized(false)}
+            aria-label="Restore normal rink view"
+            title="Restore normal rink view"
+            className="mb-2 p-1.5 rounded-lg bg-white text-slate-700 shadow-sm active:bg-slate-100"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 3v5H3M3 8l6-6M16 3v5h5M21 8l-6-6M8 21v-5H3M3 16l6 6M16 21v-5h5M21 16l-6 6" />
+            </svg>
+          </button>
+        )}
         {currentPeriod !== null && (
-          <div className="flex gap-3">
-            <button
-              onClick={undoLastShot}
-              disabled={currentPeriodShots.length === 0}
-              className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100"
-            >
-              Undo
-            </button>
-            <button
-              onClick={() => setShowOverlay(true)}
-              disabled={allShots.length === 0}
-              className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100"
-            >
-              View Shots
-            </button>
+          <div className={maximized ? 'flex flex-col' : 'flex gap-3'}>
+            <div className={maximized ? 'w-10 h-20 flex items-center justify-center' : 'contents'}>
+              <button
+                onClick={undoLastShot}
+                disabled={currentPeriodShots.length === 0}
+                className={maximized
+                  ? `w-20 py-1.5 text-[10px] bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100 ${textRotationClass}`
+                  : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
+              >
+                Undo
+              </button>
+            </div>
+            <div className={maximized ? 'w-10 h-20 flex items-center justify-center' : 'contents'}>
+              <button
+                onClick={() => setShowOverlay(true)}
+                disabled={allShots.length === 0}
+                className={maximized
+                  ? `w-20 py-1.5 text-[10px] bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100 ${textRotationClass}`
+                  : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
+              >
+                View Shots
+              </button>
+            </div>
           </div>
         )}
 
         {/* Period summaries */}
-        {game.periods.filter((p) => p.endTime).length > 0 && currentPeriod === null && (
+        {!maximized && game.periods.filter((p) => p.endTime).length > 0 && currentPeriod === null && (
           <div className="flex flex-wrap gap-2 justify-center text-xs text-slate-500">
             {game.periods
               .filter((p) => p.endTime)
@@ -297,7 +373,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
         )}
 
         {/* Export period report */}
-        {currentPeriod === null && lastCompletedPeriod && (
+        {!maximized && currentPeriod === null && lastCompletedPeriod && (
           <button
             onClick={handleExportPeriodReport}
             disabled={exportingReport}
@@ -316,6 +392,8 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
           onStartPeriod={startPeriod}
           onEndPeriod={endPeriod}
           onEndGame={onEndGame}
+          maximized={maximized}
+          textRotationClass={textRotationClass}
         />
       </div>
 
@@ -331,6 +409,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
           trackScoringChances={config.trackScoringChances}
           onConfirm={handleConfirmShot}
           onCancel={handleCancelShot}
+          deviceOrientation={deviceOrientation}
         />
       )}
 

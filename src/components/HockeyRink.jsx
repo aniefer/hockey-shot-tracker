@@ -4,7 +4,19 @@ import { normalizeRinkCoordinates } from '../utils/defaultShotTeam';
    Proportions based on NHL regulation: 200 ft x 85 ft.
    Rink geometry uses a 200 x 85 coordinate system for easy math. */
 
-export default function HockeyRink({ onTapRink, children, orientation = 'landscape' }) {
+const RINK_LENGTH = 200;
+const RINK_WIDTH = 85;
+const CORNER_RADIUS = 28;
+const FACE_OFF_CIRCLE_RADIUS = 15;
+const CENTER_ICE_X = RINK_LENGTH / 2;
+const CENTER_ICE_Y = RINK_WIDTH / 2;
+const GOAL_LINE_OFFSET = 11;
+const BLUE_LINE_OFFSET_FROM_GOAL = 64;
+const BLUE_LINE_OFFSET = GOAL_LINE_OFFSET + BLUE_LINE_OFFSET_FROM_GOAL;
+const END_FACE_OFF_X = GOAL_LINE_OFFSET + 20;
+const FACE_OFF_Y_OFFSET = 22;
+
+export default function HockeyRink({ onTapRink, children, orientation = 'landscape', maximized = false }) {
   const isPortrait = orientation === 'portrait';
 
   const reportTap = (clientX, clientY, svg) => {
@@ -29,12 +41,16 @@ export default function HockeyRink({ onTapRink, children, orientation = 'landsca
 
   return (
     <svg
-      viewBox={isPortrait ? '0 0 85 200' : '0 0 200 85'}
+      viewBox={isPortrait ? `0 0 ${RINK_WIDTH} ${RINK_LENGTH}` : `0 0 ${RINK_LENGTH} ${RINK_WIDTH}`}
       className="w-full h-auto select-none"
       style={{
         touchAction: 'none',
-        maxHeight: '60vh',
-        ...(isPortrait && { width: 'auto', height: '60vh', maxWidth: '100%' }),
+        maxHeight: maximized ? '100%' : '60vh',
+        ...(isPortrait && {
+          width: 'auto',
+          height: maximized ? '100%' : '60vh',
+          maxWidth: '100%',
+        }),
       }}
       onClick={handleClick}
       onTouchStart={handleTouch}
@@ -42,28 +58,28 @@ export default function HockeyRink({ onTapRink, children, orientation = 'landsca
       <g transform={isPortrait ? 'matrix(0 1 -1 0 85 0)' : undefined}>
         <defs>
           <clipPath id="rink-clip">
-            <rect x="0" y="0" width="200" height="85" rx="14" ry="14" />
+            <rect x="0" y="0" width={RINK_LENGTH} height={RINK_WIDTH} rx={CORNER_RADIUS} ry={CORNER_RADIUS} />
           </clipPath>
         </defs>
 
         {/* Ice surface */}
-        <rect x="0" y="0" width="200" height="85" rx="14" ry="14" fill="white" stroke="#94a3b8" strokeWidth="0.8" />
+        <rect x="0" y="0" width={RINK_LENGTH} height={RINK_WIDTH} rx={CORNER_RADIUS} ry={CORNER_RADIUS} fill="white" stroke="#94a3b8" strokeWidth="0.8" />
 
         <g clipPath="url(#rink-clip)">
           {/* Center red line */}
-          <line x1="100" y1="0" x2="100" y2="85" stroke="#ef4444" strokeWidth="0.8" />
+          <line x1={CENTER_ICE_X} y1="0" x2={CENTER_ICE_X} y2={RINK_WIDTH} stroke="#ef4444" strokeWidth="0.8" />
 
           {/* Blue lines */}
-          <line x1="75" y1="0" x2="75" y2="85" stroke="#3b82f6" strokeWidth="0.8" />
-          <line x1="125" y1="0" x2="125" y2="85" stroke="#3b82f6" strokeWidth="0.8" />
+          <line x1={BLUE_LINE_OFFSET} y1="0" x2={BLUE_LINE_OFFSET} y2={RINK_WIDTH} stroke="#3b82f6" strokeWidth="0.8" />
+          <line x1={RINK_LENGTH - BLUE_LINE_OFFSET} y1="0" x2={RINK_LENGTH - BLUE_LINE_OFFSET} y2={RINK_WIDTH} stroke="#3b82f6" strokeWidth="0.8" />
 
           {/* Goal lines */}
-          <line x1="11" y1="0" x2="11" y2="85" stroke="#ef4444" strokeWidth="0.5" strokeDasharray="1 1" />
-          <line x1="189" y1="0" x2="189" y2="85" stroke="#ef4444" strokeWidth="0.5" strokeDasharray="1 1" />
+          <line x1={GOAL_LINE_OFFSET} y1="0" x2={GOAL_LINE_OFFSET} y2={RINK_WIDTH} stroke="#ef4444" strokeWidth="0.5" strokeDasharray="1 1" />
+          <line x1={RINK_LENGTH - GOAL_LINE_OFFSET} y1="0" x2={RINK_LENGTH - GOAL_LINE_OFFSET} y2={RINK_WIDTH} stroke="#ef4444" strokeWidth="0.5" strokeDasharray="1 1" />
 
           {/* Center circle */}
-          <circle cx="100" cy="42.5" r="7.5" fill="none" stroke="#3b82f6" strokeWidth="0.5" />
-          <circle cx="100" cy="42.5" r="0.8" fill="#3b82f6" />
+          <circle cx={CENTER_ICE_X} cy={CENTER_ICE_Y} r={FACE_OFF_CIRCLE_RADIUS} fill="none" stroke="#3b82f6" strokeWidth="0.5" />
+          <circle cx={CENTER_ICE_X} cy={CENTER_ICE_Y} r="0.8" fill="#3b82f6" />
 
           {/* Face-off dots — neutral zone */}
           <circle cx="80" cy="20.5" r="0.8" fill="#ef4444" />
@@ -72,16 +88,16 @@ export default function HockeyRink({ onTapRink, children, orientation = 'landsca
           <circle cx="120" cy="64.5" r="0.8" fill="#ef4444" />
 
           {/* Face-off circles — left zone */}
-          <circle cx="31" cy="20.5" r="7.5" fill="none" stroke="#ef4444" strokeWidth="0.4" />
-          <circle cx="31" cy="20.5" r="0.8" fill="#ef4444" />
-          <circle cx="31" cy="64.5" r="7.5" fill="none" stroke="#ef4444" strokeWidth="0.4" />
-          <circle cx="31" cy="64.5" r="0.8" fill="#ef4444" />
+          <circle cx={END_FACE_OFF_X} cy={CENTER_ICE_Y - FACE_OFF_Y_OFFSET} r={FACE_OFF_CIRCLE_RADIUS} fill="none" stroke="#ef4444" strokeWidth="0.4" />
+          <circle cx={END_FACE_OFF_X} cy={CENTER_ICE_Y - FACE_OFF_Y_OFFSET} r="0.8" fill="#ef4444" />
+          <circle cx={END_FACE_OFF_X} cy={CENTER_ICE_Y + FACE_OFF_Y_OFFSET} r={FACE_OFF_CIRCLE_RADIUS} fill="none" stroke="#ef4444" strokeWidth="0.4" />
+          <circle cx={END_FACE_OFF_X} cy={CENTER_ICE_Y + FACE_OFF_Y_OFFSET} r="0.8" fill="#ef4444" />
 
           {/* Face-off circles — right zone */}
-          <circle cx="169" cy="20.5" r="7.5" fill="none" stroke="#ef4444" strokeWidth="0.4" />
-          <circle cx="169" cy="20.5" r="0.8" fill="#ef4444" />
-          <circle cx="169" cy="64.5" r="7.5" fill="none" stroke="#ef4444" strokeWidth="0.4" />
-          <circle cx="169" cy="64.5" r="0.8" fill="#ef4444" />
+          <circle cx={RINK_LENGTH - END_FACE_OFF_X} cy={CENTER_ICE_Y - FACE_OFF_Y_OFFSET} r={FACE_OFF_CIRCLE_RADIUS} fill="none" stroke="#ef4444" strokeWidth="0.4" />
+          <circle cx={RINK_LENGTH - END_FACE_OFF_X} cy={CENTER_ICE_Y - FACE_OFF_Y_OFFSET} r="0.8" fill="#ef4444" />
+          <circle cx={RINK_LENGTH - END_FACE_OFF_X} cy={CENTER_ICE_Y + FACE_OFF_Y_OFFSET} r={FACE_OFF_CIRCLE_RADIUS} fill="none" stroke="#ef4444" strokeWidth="0.4" />
+          <circle cx={RINK_LENGTH - END_FACE_OFF_X} cy={CENTER_ICE_Y + FACE_OFF_Y_OFFSET} r="0.8" fill="#ef4444" />
 
           {/* Goalie creases — left */}
           <path
