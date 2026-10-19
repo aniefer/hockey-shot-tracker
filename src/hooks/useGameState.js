@@ -2,13 +2,17 @@ import { useState, useCallback } from 'react';
 import { generateId } from '../utils/generateId';
 import { saveGame } from '../utils/storage';
 import { getShotCounts } from '../utils/shotStats';
+import { normalizeHomeStartSide } from '../utils/rinkOrientation';
+import { NEUTRAL_ZONE, appendZoneChange, getCurrentZone } from '../utils/zoneTime';
 
-function createNewGame(homeTeam, awayTeam, date) {
+function createNewGame(homeTeam, awayTeam, date, homeStartSide, trackZoneTime) {
   return {
     id: generateId(),
     date: date || new Date().toISOString(),
     homeTeam: homeTeam || 'Home',
     awayTeam: awayTeam || 'Away',
+    homeStartSide: normalizeHomeStartSide(homeStartSide),
+    trackZoneTime: Boolean(trackZoneTime),
     periods: [],
     status: 'in_progress',
   };
@@ -18,8 +22,8 @@ export function useGameState(initialGame = null) {
   const [game, setGame] = useState(initialGame);
   const [currentPeriod, setCurrentPeriod] = useState(null);
 
-  const startGame = useCallback((homeTeam, awayTeam, date) => {
-    const g = createNewGame(homeTeam, awayTeam, date);
+  const startGame = useCallback((homeTeam, awayTeam, date, homeStartSide, trackZoneTime = false) => {
+    const g = createNewGame(homeTeam, awayTeam, date, homeStartSide, trackZoneTime);
     setGame(g);
     saveGame(g);
     return g;
@@ -37,17 +41,19 @@ export function useGameState(initialGame = null) {
 
   const startPeriod = useCallback((periodNumber) => {
     setGame((prev) => {
+      const startTime = new Date().toISOString();
+      const newPeriod = {
+        number: periodNumber,
+        shots: [],
+        startTime,
+        endTime: null,
+        ...(prev.trackZoneTime
+          ? { zoneChanges: [{ zone: NEUTRAL_ZONE, timestamp: startTime }] }
+          : {}),
+      };
       const updated = {
         ...prev,
-        periods: [
-          ...prev.periods,
-          {
-            number: periodNumber,
-            shots: [],
-            startTime: new Date().toISOString(),
-            endTime: null,
-          },
-        ],
+        periods: [...prev.periods, newPeriod],
       };
       saveGame(updated);
       return updated;
@@ -68,6 +74,22 @@ export function useGameState(initialGame = null) {
     });
     setCurrentPeriod(null);
   }, [currentPeriod]);
+
+  const setZone = useCallback(
+    (zone) => {
+      setGame((prev) => {
+        if (!prev?.trackZoneTime || currentPeriod === null) return prev;
+        const timestamp = new Date().toISOString();
+        const periods = prev.periods.map((p) =>
+          p.number === currentPeriod && !p.endTime ? appendZoneChange(p, zone, timestamp) : p
+        );
+        const updated = { ...prev, periods };
+        saveGame(updated);
+        return updated;
+      });
+    },
+    [currentPeriod]
+  );
 
   const addShot = useCallback(
     (x, y, team, result, playerNumber) => {
@@ -128,6 +150,10 @@ export function useGameState(initialGame = null) {
     ? (game.periods.find((p) => p.number === currentPeriod)?.shots || [])
     : [];
 
+  const currentZone = currentPeriod !== null && game
+    ? getCurrentZone(game.periods.find((p) => p.number === currentPeriod))
+    : null;
+
   const shotCounts = getShotCounts(allShots);
 
   return {
@@ -135,11 +161,13 @@ export function useGameState(initialGame = null) {
     currentPeriod,
     allShots,
     currentPeriodShots,
+    currentZone,
     shotCounts,
     startGame,
     loadGame,
     startPeriod,
     endPeriod,
+    setZone,
     addShot,
     undoLastShot,
     endGame,

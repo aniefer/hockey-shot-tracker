@@ -4,16 +4,13 @@ import ShotPopup from './ShotPopup';
 import ShotOverlay from './ShotOverlay';
 import PeriodControls from './PeriodControls';
 import PeriodReport from './PeriodReport';
+import ZoneToggles from './ZoneToggles';
 import { exportToPdf } from '../utils/pdfExport';
 import { getDefaultShotTeam } from '../utils/defaultShotTeam';
-import { isRinkFlipped } from '../utils/rinkOrientation';
+import { getHomeStartSide, isRinkFlipped } from '../utils/rinkOrientation';
 
 function getDeviceOrientation() {
   return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
-}
-
-function getDeviceOrientationAngle() {
-  return window.screen?.orientation?.angle ?? (window.innerWidth >= window.innerHeight ? 90 : 0);
 }
 
 export default function GamePlay({ gameState, onEndGame, onExportGameData, config }) {
@@ -22,9 +19,11 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
     currentPeriod,
     allShots,
     currentPeriodShots,
+    currentZone,
     shotCounts,
     startPeriod,
     endPeriod,
+    setZone,
     addShot,
     undoLastShot,
   } = gameState;
@@ -38,20 +37,16 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
   const [rinkOrientation, setRinkOrientation] = useState('landscape');
   const [maximized, setMaximized] = useState(false);
   const [deviceOrientation, setDeviceOrientation] = useState('landscape');
-  const [deviceOrientationAngle, setDeviceOrientationAngle] = useState(0);
   const isPortrait = rinkOrientation === 'portrait';
 
+  // Maximized rink is always landscape so its long edge runs along the bottom control bar
   const handleMaximize = () => {
-    setRinkOrientation(getDeviceOrientation());
+    setRinkOrientation('landscape');
     setMaximized(true);
   };
 
   useEffect(() => {
-    const updateOrientation = () => {
-      setDeviceOrientation(getDeviceOrientation());
-      setDeviceOrientationAngle(getDeviceOrientationAngle());
-      if (maximized) setRinkOrientation(getDeviceOrientation());
-    };
+    const updateOrientation = () => setDeviceOrientation(getDeviceOrientation());
 
     window.addEventListener('resize', updateOrientation);
     window.addEventListener('orientationchange', updateOrientation);
@@ -60,12 +55,10 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
       window.removeEventListener('resize', updateOrientation);
       window.removeEventListener('orientationchange', updateOrientation);
     };
-  }, [maximized]);
+  }, []);
 
-  const textRotationClass = deviceOrientationAngle === 90 ? 'rotate-90' : '-rotate-90';
-
-  // Rink flips for period 2
-  const flipped = isRinkFlipped(currentPeriod);
+  // Rink flips for period 2, and for games where the home team starts on the left
+  const flipped = isRinkFlipped(currentPeriod, getHomeStartSide(game));
 
   // Most recently completed period (for intermission report export)
   const lastCompletedPeriod = (() => {
@@ -228,7 +221,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
 
       {/* Rink */}
       <div className={maximized
-        ? 'min-h-0 flex-1 flex items-center justify-center pl-10'
+        ? 'min-h-0 flex-1 flex items-center justify-center'
         : 'flex-1 flex items-center justify-center mb-3'}
       >
         <div className={`${isPortrait ? 'w-fit' : 'w-full'} ${maximized ? 'h-full max-w-full' : ''} relative`}>
@@ -236,6 +229,14 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
             orientation={rinkOrientation}
             maximized={maximized}
             onTapRink={currentPeriod !== null ? handleTapRink : null}
+            edgeOverlay={game.trackZoneTime ? (
+              <ZoneToggles
+                activeZone={currentZone}
+                flipped={flipped}
+                orientation={rinkOrientation}
+                onSelect={currentPeriod !== null ? setZone : null}
+              />
+            ) : null}
           >
             {/* Prompt when no period is active */}
             {currentPeriod === null && (
@@ -316,7 +317,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
 
       {/* Action buttons */}
       <div className={maximized
-        ? 'absolute left-0 top-0 bottom-0 z-10 flex w-10 flex-col items-center justify-center gap-1 bg-white/95 py-2'
+        ? 'flex flex-wrap items-center justify-center gap-2 rounded-xl bg-white/95 p-2'
         : 'space-y-3 pb-4'}
       >
         {maximized && (
@@ -325,7 +326,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
             onClick={() => setMaximized(false)}
             aria-label="Restore normal rink view"
             title="Restore normal rink view"
-            className="mb-2 p-1.5 rounded-lg bg-white text-slate-700 shadow-sm active:bg-slate-100"
+            className="p-2 rounded-lg bg-slate-100 text-slate-700 active:bg-slate-200"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 3v5H3M3 8l6-6M16 3v5h5M21 8l-6-6M8 21v-5H3M3 16l6 6M16 21v-5h5M21 16l-6 6" />
@@ -333,29 +334,25 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
           </button>
         )}
         {currentPeriod !== null && (
-          <div className={maximized ? 'flex flex-col' : 'flex gap-3'}>
-            <div className={maximized ? 'w-10 h-20 flex items-center justify-center' : 'contents'}>
-              <button
-                onClick={undoLastShot}
-                disabled={currentPeriodShots.length === 0}
-                className={maximized
-                  ? `w-20 py-1.5 text-[10px] bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100 ${textRotationClass}`
-                  : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
-              >
-                Undo
-              </button>
-            </div>
-            <div className={maximized ? 'w-10 h-20 flex items-center justify-center' : 'contents'}>
-              <button
-                onClick={() => setShowOverlay(true)}
-                disabled={allShots.length === 0}
-                className={maximized
-                  ? `w-20 py-1.5 text-[10px] bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100 ${textRotationClass}`
-                  : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
-              >
-                View Shots
-              </button>
-            </div>
+          <div className={maximized ? 'contents' : 'flex gap-3'}>
+            <button
+              onClick={undoLastShot}
+              disabled={currentPeriodShots.length === 0}
+              className={maximized
+                ? 'px-4 py-2 text-sm whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
+                : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
+            >
+              Undo
+            </button>
+            <button
+              onClick={() => setShowOverlay(true)}
+              disabled={allShots.length === 0}
+              className={maximized
+                ? 'px-4 py-2 text-sm whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
+                : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
+            >
+              View Shots
+            </button>
           </div>
         )}
 
@@ -393,7 +390,6 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
           onEndPeriod={endPeriod}
           onEndGame={onEndGame}
           maximized={maximized}
-          textRotationClass={textRotationClass}
         />
       </div>
 

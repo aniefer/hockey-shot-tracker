@@ -67,4 +67,42 @@ describe('createHeadToHeadReport', () => {
     expect(report.game.periods[0].shots[5].x).toBeCloseTo(0.2);
     expect(report.game.periods[0].shots[6].team).toBe('home');
   });
+
+  it('mirrors right-goal games into the left-goal frame in every period', () => {
+    const leftStartGame = {
+      id: 'left-start',
+      date: '2026-01-01T12:00:00.000Z',
+      homeTeam: 'Hawks',
+      awayTeam: 'Eagles',
+      homeStartSide: 'left',
+      status: 'completed',
+      periods: [
+        { number: 1, shots: [{ id: 'p1', team: 'home', result: null, x: 0.2 }] },
+        { number: 2, shots: [{ id: 'p2', team: 'home', result: null, x: 0.2 }] },
+      ],
+    };
+    const rightStartGame = {
+      id: 'right-start',
+      date: '2026-01-02T12:00:00.000Z',
+      homeTeam: 'Hawks',
+      awayTeam: 'Eagles',
+      homeStartSide: 'right',
+      status: 'completed',
+      periods: [
+        { number: 1, shots: [{ id: 'p1', team: 'home', result: null, x: 0.2 }] },
+        { number: 2, shots: [{ id: 'p2', team: 'home', result: null, x: 0.2 }] },
+      ],
+    };
+
+    const report = createHeadToHeadReport([leftStartGame, rightStartGame], 'Hawks', 'Eagles');
+    const [p1, p2] = report.game.periods;
+
+    expect(p1.shots).toHaveLength(2);
+    expect(p1.shots[0].x).toBeCloseTo(0.2);
+    expect(p1.shots[1].x).toBeCloseTo(0.8);
+    expect(p2.shots).toHaveLength(2);
+    expect(p2.shots[0].x).toBeCloseTo(0.2);
+    expect(p2.shots[1].x).toBeCloseTo(0.8);
+    expect(report.game.homeStartSide).toBe('left');
+  });
 });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './index.css';
 import HomeScreen from './components/HomeScreen';
+import HelpScreen from './components/HelpScreen';
 import NewGameSetup from './components/NewGameSetup';
 import GamePlay from './components/GamePlay';
 import GameSummary from './components/GameSummary';
@@ -30,9 +31,9 @@ export default function App() {
     setScreen('setup');
   };
 
-  const handleStartGame = (homeTeam, awayTeam, date) => {
+  const handleStartGame = (homeTeam, awayTeam, date, homeStartSide, trackZoneTime) => {
     setHeadToHeadReport(null);
-    gameState.startGame(homeTeam, awayTeam, date);
+    gameState.startGame(homeTeam, awayTeam, date, homeStartSide, trackZoneTime);
     setScreen('play');
   };
 
@@ -147,6 +148,7 @@ export default function App() {
           onNewGame={handleNewGame}
           onViewGame={handleViewGame}
           onOpenConfig={() => setScreen('config')}
+          onOpenHelp={() => setScreen('help')}
           onCreateReport={() => setScreen('reportSetup')}
           onExportAll={handleExportAll}
           onImportFile={handleImportFile}
@@ -154,6 +156,7 @@ export default function App() {
           onAddTeam={handleAddTeam}
         />
       )}
+      {screen === 'help' && <HelpScreen onBack={handleBackHome} />}
       {screen === 'config' && (
         <ConfigScreen
           config={config}

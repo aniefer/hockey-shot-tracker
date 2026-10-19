@@ -5,17 +5,20 @@ import Heatmap from './Heatmap';
 import ShotTimeline from './ShotTimeline';
 import GameMomentum from './GameMomentum';
 import ShotOutcomePie from './ShotOutcomePie';
+import ZoneTimeChart from './ZoneTimeChart';
 import { exportToPdf } from '../utils/pdfExport';
-import { isRinkFlipped, normalizeFullGameShots } from '../utils/rinkOrientation';
+import { getHomeStartSide, isRinkFlipped, normalizeFullGameShots } from '../utils/rinkOrientation';
 import { getShotCounts } from '../utils/shotStats';
+import { getGameZoneDurations } from '../utils/zoneTime';
 
 export default function GameSummary({ game, headToHead, onBack, onExportGameData, config }) {
   const [exporting, setExporting] = useState(false);
   const [exportingData, setExportingData] = useState(false);
   const [exportDataError, setExportDataError] = useState('');
 
+  const homeStartSide = getHomeStartSide(game);
   const allShots = game.periods.flatMap((p) => p.shots);
-  const fullGameMapShots = normalizeFullGameShots(game.periods);
+  const fullGameMapShots = normalizeFullGameShots(game.periods, homeStartSide);
   const homeShots = allShots.filter((s) => s.team === 'home');
   const awayShots = allShots.filter((s) => s.team === 'away');
   const homeGoals = homeShots.filter((s) => s.result === 'goal').length;
@@ -62,9 +65,9 @@ export default function GameSummary({ game, headToHead, onBack, onExportGameData
   };
 
   // Zone analysis: classify shots as offensive/neutral/defensive relative to each team.
-  // Standard hockey: P1 & P3 & OT: home attacks right. P2: home attacks left.
+  // Home shoots right in P1 when its goal is on the left; the rink flips in P2 and when the home goal is on the right.
   const classifyZone = (x, team, periodNumber) => {
-    const homeAttacksRight = !isRinkFlipped(periodNumber);
+    const homeAttacksRight = !isRinkFlipped(periodNumber, homeStartSide);
     const isLeft = x < 0.375;
     const isRight = x > 0.625;
 
@@ -186,6 +189,8 @@ export default function GameSummary({ game, headToHead, onBack, onExportGameData
       </div>
     );
   };
+
+  const zoneDurations = getGameZoneDurations(game);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -401,6 +406,16 @@ export default function GameSummary({ game, headToHead, onBack, onExportGameData
             </>
           )}
         </div>
+
+        {/* Time in zone (single game only) */}
+        {!headToHead && game.trackZoneTime && zoneDurations.total > 0 && (
+          <div className="mb-6">
+            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
+              Time in Zone
+            </h2>
+            <ZoneTimeChart periods={game.periods} />
+          </div>
+        )}
 
         {/* Shot outcome breakdown */}
         {config.reportShotOutcomeBreakdown && (

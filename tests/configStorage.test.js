@@ -23,11 +23,11 @@ describe('configuration storage', () => {
 
   it('uses defaults that preserve existing behavior', () => {
     expect(loadConfig()).toEqual({
-      trackBlockedShots: true,
+      trackBlockedShots: false,
       trackScoringChances: true,
-      reportShotsByZone: true,
+      reportShotsByZone: false,
       reportShotOutcomeBreakdown: true,
-      reportShotMapsByPeriod: 'mini',
+      reportShotMapsByPeriod: 'full',
       teams: [],
       defaultTeam: '',
     });

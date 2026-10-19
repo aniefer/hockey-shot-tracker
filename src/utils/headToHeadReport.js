@@ -1,3 +1,5 @@
+import { getHomeStartSide } from './rinkOrientation';
+
 export function getPlayedAgainstTeams(teams, games, selectedTeam) {
   if (!selectedTeam) return [];
 
@@ -28,6 +30,8 @@ export function createHeadToHeadReport(games, homeTeam, awayTeam) {
     let homeGoals = 0;
     let awayGoals = 0;
     const reverseRink = game.homeTeam === awayTeam;
+    // Aggregate in the frame where the home team's goal is on the left (home shoots right in period 1).
+    const mirrorRink = reverseRink !== (getHomeStartSide(game) === 'right');
 
     game.periods.forEach((period, periodIndex) => {
       const periodKey = String(period.number);
@@ -63,7 +67,7 @@ export function createHeadToHeadReport(games, homeTeam, awayTeam) {
           ...shot,
           id: `${game.id}-${shotId}`,
           team: reportTeam,
-          x: reverseRink && typeof shot.x === 'number' ? 1 - shot.x : shot.x,
+          x: mirrorRink && typeof shot.x === 'number' ? 1 - shot.x : shot.x,
         });
       });
     });
@@ -104,6 +108,7 @@ export function createHeadToHeadReport(games, homeTeam, awayTeam) {
       date: lastDate || new Date().toISOString(),
       homeTeam,
       awayTeam,
+      homeStartSide: 'left',
       periods,
       status: 'completed',
     },

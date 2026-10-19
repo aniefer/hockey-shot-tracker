@@ -16,7 +16,7 @@ Hockey Shot Tracker lets you record every shot on goal as it happens during a ga
 
 ### 1. Set up teams and start a game
 
-On first launch, add a team name; it becomes the default home team. Manage teams and choose a different default in Configuration. To start a game, tap "New Game," choose home and away teams, or add a new team from the setup screen. Use "Flip home and away" to swap the selections. The date and time fill in automatically.
+On first launch, add a team name; it becomes the default home team. Manage teams and choose a different default in Configuration. To start a game, tap "New Game," choose home and away teams, or add a new team from the setup screen. Use "Flip home and away" to swap the selections. Choose which side of the rink the home team's goal is on (left or right). The date and time fill in automatically. Optionally check "Track time in zone" to record time spent in the defensive, neutral, and offensive zones.
 
 <p align="center">
   <img src="docs/screenshots/home-screen.png" alt="Home screen with saved games" width="300" />
@@ -40,8 +40,9 @@ Other things you can do during the game:
 
 - **Undo** the last shot if you mis-tap
 - **Running shot counter** at the top so you always know the totals
+- **Time in zone** (if enabled in New Game): tap Defensive, Neutral, or Offensive in the bars just outside the top edge of the rink (the right edge in portrait) to switch the active zone. Only one zone is active at a time, and each period starts in Neutral. Taps on the zone bars don't record shots, and every tap on the ice does.
 - **Period management** handles the full flow: 1st, 2nd, and 3rd periods, plus optional overtime for tournament games
-- The rink **flips orientation** between periods since teams switch ends (just like a real game)
+- The rink **flips orientation** between periods since teams switch ends (just like a real game). When the home team's goal is on the right, the rink starts reversed, so the home team shoots left in the 1st period
 
 ### 3. Review an individual game
 
@@ -56,6 +57,7 @@ After the final period, tap "End & Save Game" and the app generates a full summa
 - Shot density heatmap you can filter by team
 - Per-player stats (shots and goals) for any players you tagged by number
 - Shot momentum timeline for the game
+- Time in zone bar chart (for games tracked with "Track time in zone")
 
 <p align="center">
   <img src="docs/screenshots/summary-desktop.png" alt="Game summary report" width="700" />
@@ -90,6 +92,10 @@ Your data stays on your device. The app saves games to your browser's local stor
 Team names, the default team, tracking options, and report preferences are saved in local storage as well. Open Configuration from the home screen to manage teams and change settings.
 
 ---
+
+### New to the app?
+
+Tap **How to use** on the home screen for an in-app mobile guide covering the New Game setup, recording shots, periods, Maximize mode, zone time, and exporting reports.
 
 ## Technical Details
 

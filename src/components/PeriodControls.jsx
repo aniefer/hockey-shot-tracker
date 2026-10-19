@@ -5,7 +5,6 @@ export default function PeriodControls({
   onEndPeriod,
   onEndGame,
   maximized = false,
-  textRotationClass = '-rotate-90',
 }) {
   const completedPeriods = game.periods.filter((p) => p.endTime);
   const periodInProgress = currentPeriod !== null;
@@ -31,11 +30,9 @@ export default function PeriodControls({
   const overtimeDone = completedPeriods.some((p) => p.number === 'OT');
   const next = nextPeriodNumber();
   const buttonClass = maximized
-    ? `w-28 py-1.5 text-[10px] bg-blue-600 text-white font-semibold rounded-lg active:bg-blue-700 transition-colors ${textRotationClass}`
+    ? 'px-4 py-2 text-sm whitespace-nowrap bg-blue-600 text-white font-semibold rounded-lg active:bg-blue-700 transition-colors'
     : 'w-full py-3 bg-blue-600 text-white font-semibold rounded-xl active:bg-blue-700 transition-colors';
-  const buttonWrapperClass = maximized
-    ? 'w-10 h-28 flex items-center justify-center'
-    : 'contents';
+  const buttonWrapperClass = 'contents';
 
   if (periodInProgress) {
     return (
@@ -43,7 +40,7 @@ export default function PeriodControls({
         <button
           onClick={onEndPeriod}
           className={maximized
-          ? `w-28 py-1.5 text-[10px] bg-amber-500 text-white font-semibold rounded-lg active:bg-amber-600 transition-colors ${textRotationClass}`
+            ? 'px-4 py-2 text-sm whitespace-nowrap bg-amber-500 text-white font-semibold rounded-lg active:bg-amber-600 transition-colors'
             : 'w-full py-3 bg-amber-500 text-white font-semibold rounded-xl active:bg-amber-600 transition-colors'}
         >
           End {periodLabel(currentPeriod)}
@@ -55,13 +52,13 @@ export default function PeriodControls({
   // After 3rd period ends (or OT ends) — show end game
   if (allRegulationDone && !periodInProgress) {
     return (
-      <div className={maximized ? 'flex flex-col' : 'flex gap-3'}>
+      <div className={maximized ? 'flex gap-2' : 'flex gap-3'}>
         {!overtimeDone && next === 'OT' && (
           <div className={buttonWrapperClass}>
             <button
               onClick={() => onStartPeriod('OT')}
               className={maximized
-                ? `w-28 py-1.5 text-[10px] bg-slate-200 text-slate-700 font-semibold rounded-lg active:bg-slate-300 transition-colors ${textRotationClass}`
+                ? 'px-4 py-2 text-sm whitespace-nowrap bg-slate-200 text-slate-700 font-semibold rounded-lg active:bg-slate-300 transition-colors'
                 : 'flex-1 py-3 bg-slate-200 text-slate-700 font-semibold rounded-xl active:bg-slate-300 transition-colors'}
             >
               Add Overtime
@@ -72,7 +69,7 @@ export default function PeriodControls({
           <button
             onClick={onEndGame}
             className={maximized
-              ? `w-28 py-1.5 text-[10px] bg-emerald-600 text-white font-semibold rounded-lg active:bg-emerald-700 transition-colors ${textRotationClass}`
+              ? 'px-4 py-2 text-sm whitespace-nowrap bg-emerald-600 text-white font-semibold rounded-lg active:bg-emerald-700 transition-colors'
               : 'flex-1 py-3 bg-emerald-600 text-white font-semibold rounded-xl active:bg-emerald-700 transition-colors'}
           >
             End &amp; Save Game

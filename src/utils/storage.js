@@ -2,11 +2,11 @@ const STORAGE_KEY = 'hockey-shot-tracker-games';
 const CONFIG_STORAGE_KEY = 'hockey-shot-tracker-config';
 
 export const DEFAULT_CONFIG = {
-  trackBlockedShots: true,
+  trackBlockedShots: false,
   trackScoringChances: true,
-  reportShotsByZone: true,
+  reportShotsByZone: false,
   reportShotOutcomeBreakdown: true,
-  reportShotMapsByPeriod: 'mini',
+  reportShotMapsByPeriod: 'full',
   teams: [],
   defaultTeam: '',
 };

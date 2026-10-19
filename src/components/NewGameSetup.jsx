@@ -27,6 +27,8 @@ export default function NewGameSetup({
   const [newAwayTeam, setNewAwayTeam] = useState('');
   const [date, setDate] = useState(dateStr);
   const [time, setTime] = useState(timeStr);
+  const [homeStartSide, setHomeStartSide] = useState('left');
+  const [trackZoneTime, setTrackZoneTime] = useState(false);
   const [teamError, setTeamError] = useState('');
 
   const handleSubmit = (e) => {
@@ -63,7 +65,7 @@ export default function NewGameSetup({
     }
 
     const dateTime = new Date(`${date}T${time}`).toISOString();
-    onStart(resolvedHomeTeam, resolvedAwayTeam, dateTime);
+    onStart(resolvedHomeTeam, resolvedAwayTeam, dateTime, homeStartSide, trackZoneTime);
   };
 
   const flipTeams = () => {
@@ -174,6 +176,53 @@ export default function NewGameSetup({
           Flip home and away
         </button>
         {teamError && <p className="text-sm text-red-600" role="alert">{teamError}</p>}
+
+        <fieldset>
+          <legend className="block text-sm font-medium text-slate-600 mb-1">Home goal is on the</legend>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { value: 'left', label: 'Left' },
+              { value: 'right', label: 'Right' },
+            ].map((option) => (
+              <label
+                key={option.value}
+                className={`flex items-center justify-center px-4 py-3 border rounded-xl text-lg cursor-pointer select-none transition-colors ${
+                  homeStartSide === option.value
+                    ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold'
+                    : 'border-slate-300 bg-white text-slate-700'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="home-start-side"
+                  value={option.value}
+                  checked={homeStartSide === option.value}
+                  onChange={() => setHomeStartSide(option.value)}
+                  className="sr-only"
+                />
+                {option.label}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            The home team shoots toward the other end in the 1st period. The rink flips for the 2nd period.
+          </p>
+        </fieldset>
+
+        <label className="flex items-start gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={trackZoneTime}
+            onChange={(event) => setTrackZoneTime(event.target.checked)}
+            className="mt-1 h-5 w-5 shrink-0 accent-blue-600"
+          />
+          <span>
+            <span className="block text-sm font-medium text-slate-700">Track time in zone</span>
+            <span className="block text-sm text-slate-500">
+              Adds Defensive, Neutral, and Offensive toggles along the top of the rink. Each period starts in Neutral.
+            </span>
+          </span>
+        </label>
 
         <div className="grid grid-cols-2 gap-3">
           <div>

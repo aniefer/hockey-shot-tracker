@@ -1,4 +1,5 @@
 import { normalizeRinkCoordinates } from '../utils/defaultShotTeam';
+import { ZONE_BAND_GAP, ZONE_BAND_HEIGHT } from '../utils/zoneTime';
 
 /* Hockey rink SVG — whiteboard / dry-erase style.
    Proportions based on NHL regulation: 200 ft x 85 ft.
@@ -15,15 +16,29 @@ const BLUE_LINE_OFFSET_FROM_GOAL = 64;
 const BLUE_LINE_OFFSET = GOAL_LINE_OFFSET + BLUE_LINE_OFFSET_FROM_GOAL;
 const END_FACE_OFF_X = GOAL_LINE_OFFSET + 20;
 const FACE_OFF_Y_OFFSET = 22;
+const EDGE_MARGIN = ZONE_BAND_HEIGHT + ZONE_BAND_GAP;
 
-export default function HockeyRink({ onTapRink, children, orientation = 'landscape', maximized = false }) {
+export default function HockeyRink({ onTapRink, children, edgeOverlay = null, orientation = 'landscape', maximized = false }) {
   const isPortrait = orientation === 'portrait';
+
+  // Overlay content can sit outside the ice in a margin: above it in landscape, right of it in portrait.
+  const margin = edgeOverlay ? EDGE_MARGIN : 0;
+  const viewBox = isPortrait
+    ? { x: 0, y: 0, width: RINK_WIDTH + margin, height: RINK_LENGTH }
+    : { x: 0, y: -margin, width: RINK_LENGTH, height: RINK_WIDTH + margin };
+  const ice = isPortrait
+    ? { x: 0, y: 0, width: RINK_WIDTH, height: RINK_LENGTH }
+    : { x: 0, y: 0, width: RINK_LENGTH, height: RINK_WIDTH };
 
   const reportTap = (clientX, clientY, svg) => {
     if (!onTapRink) return;
     const rect = svg.getBoundingClientRect();
-    const screenX = (clientX - rect.left) / rect.width;
-    const screenY = (clientY - rect.top) / rect.height;
+    const fractionX = (clientX - rect.left) / rect.width;
+    const fractionY = (clientY - rect.top) / rect.height;
+    // Express the tap as a fraction of the ice, ignoring taps in the overlay margin.
+    const screenX = (viewBox.x + fractionX * viewBox.width - ice.x) / ice.width;
+    const screenY = (viewBox.y + fractionY * viewBox.height - ice.y) / ice.height;
+    if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) return;
     const { x, y } = normalizeRinkCoordinates(screenX, screenY, orientation);
     onTapRink(x, y);
   };
@@ -41,7 +56,7 @@ export default function HockeyRink({ onTapRink, children, orientation = 'landsca
 
   return (
     <svg
-      viewBox={isPortrait ? `0 0 ${RINK_WIDTH} ${RINK_LENGTH}` : `0 0 ${RINK_LENGTH} ${RINK_WIDTH}`}
+      viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
       className="w-full h-auto select-none"
       style={{
         touchAction: 'none',
@@ -125,6 +140,8 @@ export default function HockeyRink({ onTapRink, children, orientation = 'landsca
           {children}
         </g>
       </g>
+
+      {edgeOverlay}
     </svg>
   );
 }

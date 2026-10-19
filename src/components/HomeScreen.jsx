@@ -6,6 +6,7 @@ export default function HomeScreen({
   onNewGame,
   onViewGame,
   onOpenConfig,
+  onOpenHelp,
   onCreateReport,
   onExportAll,
   onImportFile,
@@ -270,7 +271,18 @@ export default function HomeScreen({
       )}
 
       <div className="mb-8">
-        <div className="flex justify-end mb-2">
+        <div className="flex justify-between mb-2">
+          <button
+            type="button"
+            onClick={onOpenHelp}
+            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7v.5M12 17h.01" />
+            </svg>
+            How to use
+          </button>
           <button
             onClick={onOpenConfig}
             className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
