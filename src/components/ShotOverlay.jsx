@@ -3,7 +3,6 @@ import HockeyRink from './HockeyRink';
 
 export default function ShotOverlay({
   periods,
-  currentPeriod,
   orientation = 'landscape',
   trackBlockedShots = true,
   trackScoringChances = true,

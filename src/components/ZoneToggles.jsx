@@ -33,7 +33,6 @@ export default function ZoneToggles({ activeZone, flipped, orientation, onSelect
               event.stopPropagation();
               if (onSelect && !isActive) onSelect(zone);
             }}
-            onTouchStart={(event) => event.stopPropagation()}
           >
             <rect
               x={rect.x}

@@ -511,8 +511,6 @@ export default function GameSummary({ game, headToHead, onBack, onExportGameData
                     ) : (
                       <MiniShotMap
                         shots={p.shots}
-                        homeTeam={game.homeTeam}
-                        awayTeam={game.awayTeam}
                         trackScoringChances={config.trackScoringChances}
                       />
                     )}

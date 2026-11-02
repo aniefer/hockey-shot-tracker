@@ -134,10 +134,26 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
     return '';
   };
 
+  // A device held in portrait gets the maximized view rotated a quarter turn, so the
+  // landscape rink's long edge runs along the device's long edge.
+  const rotateMaximized = maximized && deviceOrientation === 'portrait';
+  const maximizedStyle = rotateMaximized
+    ? {
+        right: 'auto',
+        bottom: 'auto',
+        width: '100dvh',
+        height: '100dvw',
+        transformOrigin: 'top left',
+        transform: 'translateX(100dvw) rotate(90deg)',
+      }
+    : undefined;
+
   return (
-    <div className={maximized
-      ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-slate-900 p-2'
-      : 'max-w-2xl mx-auto px-3 py-4 flex flex-col min-h-screen'}
+    <div
+      className={maximized
+        ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-slate-900 p-2'
+        : 'max-w-2xl mx-auto px-3 py-4 flex flex-col min-h-screen'}
+      style={maximizedStyle}
     >
       {/* Header */}
       <div className={maximized ? 'hidden' : 'mb-3'}>
@@ -396,16 +412,16 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
       {/* Shot detail popup */}
       {pendingShot && (
         <ShotPopup
-          x={pendingShot.x}
-          y={pendingShot.y}
           initialTeam={pendingShot.initialTeam}
           homeTeam={game.homeTeam}
           awayTeam={game.awayTeam}
           trackBlockedShots={config.trackBlockedShots}
           trackScoringChances={config.trackScoringChances}
+          trackPlayerNumbers={config.trackPlayerNumbers}
           onConfirm={handleConfirmShot}
           onCancel={handleCancelShot}
           deviceOrientation={deviceOrientation}
+          rotated={rotateMaximized}
         />
       )}
 
@@ -413,7 +429,6 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
       {showOverlay && (
         <ShotOverlay
           periods={game.periods}
-          currentPeriod={currentPeriod}
           orientation={rinkOrientation}
           trackBlockedShots={config.trackBlockedShots}
           trackScoringChances={config.trackScoringChances}

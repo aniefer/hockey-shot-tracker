@@ -3,10 +3,11 @@
 export const ZONES = ['defensive', 'neutral', 'offensive'];
 export const NEUTRAL_ZONE = 'neutral';
 
+// Keys stay defensive/offensive because they are stored in saved games; labels name the end of the rink.
 export const ZONE_LABELS = {
-  defensive: 'Defensive',
+  defensive: 'Home',
   neutral: 'Neutral',
-  offensive: 'Offensive',
+  offensive: 'Away',
 };
 
 // Size of the zone bars and their gap from the ice, in rink units (200 x 85 ice).

@@ -99,7 +99,7 @@ export default function HelpScreen({ onBack }) {
             </li>
             <li>
               <strong>Track time in zone:</strong> check this box to record how long the puck spends
-              in the defensive, neutral, and offensive zones. It is off by default. See{' '}
+              in the Home, neutral, and Away zones. It is off by default. See{' '}
               <a href="#help-zone" className="text-blue-600 font-medium">Tracking time in zone</a>.
             </li>
             <li>
@@ -149,7 +149,8 @@ export default function HelpScreen({ onBack }) {
               {' '}<strong>Blocked</strong> is also available.
             </li>
             <li>
-              <strong>Player #</strong> is optional. Enter the jersey number to get per-player stats.
+              When <strong>Track player numbers</strong> is turned on in Configuration, a <strong>Player #</strong>
+              field appears. It is optional. Enter the jersey number to get per-player stats.
             </li>
           </ul>
           <p>
@@ -185,8 +186,9 @@ export default function HelpScreen({ onBack }) {
         <Section id="help-zone" title="Tracking time in zone">
           <p>
             If you checked <strong>Track time in zone</strong> when setting up the game, colored bars
-            appear along the top edge of the rink: <strong>Defensive</strong>, <strong>Neutral</strong>,
-            and <strong>Offensive</strong>. Only one zone is active at a time.
+            appear along the top edge of the rink: <strong>Home</strong>, <strong>Neutral</strong>,
+            and <strong>Away</strong>. Home is the end with the home team's goal; Away is the end with the
+            away team's goal. Only one zone is active at a time.
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Each period starts in <strong>Neutral</strong>.</li>

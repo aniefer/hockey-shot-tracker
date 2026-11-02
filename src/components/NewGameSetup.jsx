@@ -219,7 +219,7 @@ export default function NewGameSetup({
           <span>
             <span className="block text-sm font-medium text-slate-700">Track time in zone</span>
             <span className="block text-sm text-slate-500">
-              Adds Defensive, Neutral, and Offensive toggles along the top of the rink. Each period starts in Neutral.
+              Adds Home, Neutral, and Away toggles along the top of the rink. Each period starts in Neutral.
             </span>
           </span>
         </label>

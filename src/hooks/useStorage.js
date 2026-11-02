@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { loadGames, deleteGame as removeGame } from '../utils/storage';
 
 export function useStorage() {
-  const [games, setGames] = useState([]);
+  const [games, setGames] = useState(loadGames);
 
   const refresh = () => {
     setGames(loadGames());
   };
-
-  useEffect(() => {
-    refresh();
-  }, []);
 
   const deleteGame = (id) => {
     removeGame(id);

@@ -58,7 +58,7 @@ export default function ZoneTimeChart({ periods }) {
         ))}
       </div>
       <div className="text-xs text-slate-400 mt-2">
-        {formatZoneDuration(gameTotal)} tracked. Percentages are of each period's tracked time. Zones are from the home team's perspective.
+        {formatZoneDuration(gameTotal)} tracked. Percentages are of each period's tracked time. Home is the end with the home team's goal; Away is the end with the away team's goal.
       </div>
     </div>
   );

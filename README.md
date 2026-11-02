@@ -16,7 +16,7 @@ Hockey Shot Tracker lets you record every shot on goal as it happens during a ga
 
 ### 1. Set up teams and start a game
 
-On first launch, add a team name; it becomes the default home team. Manage teams and choose a different default in Configuration. To start a game, tap "New Game," choose home and away teams, or add a new team from the setup screen. Use "Flip home and away" to swap the selections. Choose which side of the rink the home team's goal is on (left or right). The date and time fill in automatically. Optionally check "Track time in zone" to record time spent in the defensive, neutral, and offensive zones.
+On first launch, add a team name; it becomes the default home team. Manage teams and choose a different default in Configuration. To start a game, tap "New Game," choose home and away teams, or add a new team from the setup screen. Use "Flip home and away" to swap the selections. Choose which side of the rink the home team's goal is on (left or right). The date and time fill in automatically. Optionally check "Track time in zone" to record time spent in the Home, neutral, and Away zones (Home is the end with the home team's goal).
 
 <p align="center">
   <img src="docs/screenshots/home-screen.png" alt="Home screen with saved games" width="300" />
@@ -26,7 +26,7 @@ On first launch, add a team name; it becomes the default home team. Manage teams
 
 ### 2. Track shots during the game
 
-The app displays a clean whiteboard-style hockey rink. When a shot on goal happens, tap the spot on the ice where it came from. A quick popup lets you tag the team, whether it was a goal, blocked shot, or scoring chance, and optionally the player's jersey number. Tap OK and you're back to watching the game.
+The app displays a clean whiteboard-style hockey rink. When a shot on goal happens, tap the spot on the ice where it came from. A quick popup lets you tag the team, whether it was a goal, blocked shot, or scoring chance, and, if you've turned on "Track player numbers" in Configuration, the player's jersey number. Tap OK and you're back to watching the game.
 
 The rink stays clean throughout. No clutter, no marks piling up. You can tap "View Shots" any time to pull up an overlay of everything you've recorded so far, then dismiss it and keep going.
 
@@ -40,7 +40,7 @@ Other things you can do during the game:
 
 - **Undo** the last shot if you mis-tap
 - **Running shot counter** at the top so you always know the totals
-- **Time in zone** (if enabled in New Game): tap Defensive, Neutral, or Offensive in the bars just outside the top edge of the rink (the right edge in portrait) to switch the active zone. Only one zone is active at a time, and each period starts in Neutral. Taps on the zone bars don't record shots, and every tap on the ice does.
+- **Time in zone** (if enabled in New Game): tap Home, Neutral, or Away in the bars just outside the top edge of the rink (the right edge in portrait) to switch the active zone. Only one zone is active at a time, and each period starts in Neutral. Taps on the zone bars don't record shots, and every tap on the ice does.
 - **Period management** handles the full flow: 1st, 2nd, and 3rd periods, plus optional overtime for tournament games
 - The rink **flips orientation** between periods since teams switch ends (just like a real game). When the home team's goal is on the right, the rink starts reversed, so the home team shoots left in the 1st period
 
@@ -55,7 +55,7 @@ After the final period, tap "End & Save Game" and the app generates a full summa
 - Goalie save percentages
 - Shot location map showing every shot plotted on the rink (goals are filled circles, blocked shots are open circles, and scoring chances are diamonds)
 - Shot density heatmap you can filter by team
-- Per-player stats (shots and goals) for any players you tagged by number
+- Per-player stats (shots and goals) for any players you tagged by number (requires "Track player numbers")
 - Shot momentum timeline for the game
 - Time in zone bar chart (for games tracked with "Track time in zone")
 

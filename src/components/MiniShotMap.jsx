@@ -2,8 +2,6 @@ import HockeyRink from './HockeyRink';
 
 export default function MiniShotMap({
   shots,
-  homeTeam,
-  awayTeam,
   label,
   trackScoringChances = true,
 }) {

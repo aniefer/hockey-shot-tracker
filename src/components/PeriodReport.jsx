@@ -2,6 +2,19 @@ import MiniShotMap from './MiniShotMap';
 import { getHomeStartSide, isRinkFlipped } from '../utils/rinkOrientation';
 import { getShotCounts } from '../utils/shotStats';
 
+function ZoneBar({ label, count, total, color, percent }) {
+  const width = total > 0 ? (count / total) * 100 : 0;
+  return (
+    <div className="flex items-center gap-1.5 text-xs">
+      <span className="w-8 text-right text-slate-500 shrink-0">{label}</span>
+      <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${width}%`, backgroundColor: color }} />
+      </div>
+      <span className="w-12 text-right text-slate-600">{count} ({percent})</span>
+    </div>
+  );
+}
+
 export default function PeriodReport({ game, periodNumber, id, config }) {
   const period = game.periods.find((p) => p.number === periodNumber);
   if (!period) return null;
@@ -120,19 +133,6 @@ export default function PeriodReport({ game, periodNumber, id, config }) {
 
   const duration = formatDuration();
 
-  const ZoneBar = ({ label, count, total, color }) => {
-    const width = total > 0 ? (count / total) * 100 : 0;
-    return (
-      <div className="flex items-center gap-1.5 text-xs">
-        <span className="w-8 text-right text-slate-500 shrink-0">{label}</span>
-        <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-          <div className="h-full rounded-full" style={{ width: `${width}%`, backgroundColor: color }} />
-        </div>
-        <span className="w-12 text-right text-slate-600">{count} ({pct(count, total)})</span>
-      </div>
-    );
-  };
-
   return (
     <div id={id} className="bg-white p-5" style={{ width: '480px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Header */}
@@ -232,8 +232,6 @@ export default function PeriodReport({ game, periodNumber, id, config }) {
           </h2>
           <MiniShotMap
             shots={shots}
-            homeTeam={game.homeTeam}
-            awayTeam={game.awayTeam}
             trackScoringChances={config.trackScoringChances}
           />
           <div className="flex justify-center gap-4 mt-1 text-xs">
@@ -264,9 +262,9 @@ export default function PeriodReport({ game, periodNumber, id, config }) {
               <div>
                 <div className="text-xs font-semibold text-blue-600 mb-1">{game.homeTeam}</div>
                 <div className="space-y-1">
-                  <ZoneBar label="Off" count={homeOffensive} total={homeShots.length} color="#3b82f6" />
-                  <ZoneBar label="Neut" count={homeNeutral} total={homeShots.length} color="#3b82f6" />
-                  <ZoneBar label="Def" count={homeDefensive} total={homeShots.length} color="#3b82f6" />
+                  <ZoneBar label="Off" count={homeOffensive} total={homeShots.length} percent={pct(homeOffensive, homeShots.length)} color="#3b82f6" />
+                  <ZoneBar label="Neut" count={homeNeutral} total={homeShots.length} percent={pct(homeNeutral, homeShots.length)} color="#3b82f6" />
+                  <ZoneBar label="Def" count={homeDefensive} total={homeShots.length} percent={pct(homeDefensive, homeShots.length)} color="#3b82f6" />
                 </div>
               </div>
             )}
@@ -274,9 +272,9 @@ export default function PeriodReport({ game, periodNumber, id, config }) {
               <div>
                 <div className="text-xs font-semibold text-red-500 mb-1">{game.awayTeam}</div>
                 <div className="space-y-1">
-                  <ZoneBar label="Off" count={awayOffensive} total={awayShots.length} color="#ef4444" />
-                  <ZoneBar label="Neut" count={awayNeutral} total={awayShots.length} color="#ef4444" />
-                  <ZoneBar label="Def" count={awayDefensive} total={awayShots.length} color="#ef4444" />
+                  <ZoneBar label="Off" count={awayOffensive} total={awayShots.length} percent={pct(awayOffensive, awayShots.length)} color="#ef4444" />
+                  <ZoneBar label="Neut" count={awayNeutral} total={awayShots.length} percent={pct(awayNeutral, awayShots.length)} color="#ef4444" />
+                  <ZoneBar label="Def" count={awayDefensive} total={awayShots.length} percent={pct(awayDefensive, awayShots.length)} color="#ef4444" />
                 </div>
               </div>
             )}

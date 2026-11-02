@@ -32,12 +32,13 @@ export default function HockeyRink({ onTapRink, children, edgeOverlay = null, or
 
   const reportTap = (clientX, clientY, svg) => {
     if (!onTapRink) return;
-    const rect = svg.getBoundingClientRect();
-    const fractionX = (clientX - rect.left) / rect.width;
-    const fractionY = (clientY - rect.top) / rect.height;
+    // Map through the SVG's own transform so letterboxing (preserveAspectRatio) is respected.
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const point = new DOMPoint(clientX, clientY).matrixTransform(ctm.inverse());
     // Express the tap as a fraction of the ice, ignoring taps in the overlay margin.
-    const screenX = (viewBox.x + fractionX * viewBox.width - ice.x) / ice.width;
-    const screenY = (viewBox.y + fractionY * viewBox.height - ice.y) / ice.height;
+    const screenX = (point.x - ice.x) / ice.width;
+    const screenY = (point.y - ice.y) / ice.height;
     if (screenX < 0 || screenX > 1 || screenY < 0 || screenY > 1) return;
     const { x, y } = normalizeRinkCoordinates(screenX, screenY, orientation);
     onTapRink(x, y);
@@ -45,13 +46,6 @@ export default function HockeyRink({ onTapRink, children, edgeOverlay = null, or
 
   const handleClick = (e) => {
     reportTap(e.clientX, e.clientY, e.currentTarget);
-  };
-
-  const handleTouch = (e) => {
-    if (!onTapRink) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    reportTap(touch.clientX, touch.clientY, e.currentTarget);
   };
 
   return (
@@ -68,7 +62,6 @@ export default function HockeyRink({ onTapRink, children, edgeOverlay = null, or
         }),
       }}
       onClick={handleClick}
-      onTouchStart={handleTouch}
     >
       <g transform={isPortrait ? 'matrix(0 1 -1 0 85 0)' : undefined}>
         <defs>

@@ -25,12 +25,18 @@ describe('configuration storage', () => {
     expect(loadConfig()).toEqual({
       trackBlockedShots: false,
       trackScoringChances: true,
+      trackPlayerNumbers: false,
       reportShotsByZone: false,
       reportShotOutcomeBreakdown: true,
       reportShotMapsByPeriod: 'full',
       teams: [],
       defaultTeam: '',
     });
+  });
+
+  it('keeps player number tracking when it is explicitly enabled', () => {
+    expect(normalizeConfig({ trackPlayerNumbers: true }).trackPlayerNumbers).toBe(true);
+    expect(normalizeConfig({ trackPlayerNumbers: 'yes' }).trackPlayerNumbers).toBe(false);
   });
 
   it('persists configuration independently from saved games', () => {

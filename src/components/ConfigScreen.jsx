@@ -140,6 +140,12 @@ export default function ConfigScreen({ config, onChange, onAddTeam, onDeleteTeam
           value={config.trackScoringChances}
           onChange={(value) => onChange('trackScoringChances', value)}
         />
+        <ToggleSetting
+          label="Track player numbers"
+          description="Show the optional player number field when recording a shot and include per-player stats in reports."
+          value={config.trackPlayerNumbers}
+          onChange={(value) => onChange('trackPlayerNumbers', value)}
+        />
       </section>
 
       <section className="bg-white rounded-2xl shadow-sm border border-slate-200 px-4">
@@ -148,7 +154,7 @@ export default function ConfigScreen({ config, onChange, onAddTeam, onDeleteTeam
         </h2>
         <ToggleSetting
           label="Report shots by zone"
-          description="Include the offensive, neutral, and defensive zone breakdown."
+          description="Include the Home, neutral, and Away zone breakdown."
           value={config.reportShotsByZone}
           onChange={(value) => onChange('reportShotsByZone', value)}
         />

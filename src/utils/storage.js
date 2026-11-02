@@ -4,6 +4,7 @@ const CONFIG_STORAGE_KEY = 'hockey-shot-tracker-config';
 export const DEFAULT_CONFIG = {
   trackBlockedShots: false,
   trackScoringChances: true,
+  trackPlayerNumbers: false,
   reportShotsByZone: false,
   reportShotOutcomeBreakdown: true,
   reportShotMapsByPeriod: 'full',
@@ -37,6 +38,9 @@ export function normalizeConfig(config) {
     trackScoringChances: typeof config.trackScoringChances === 'boolean'
       ? config.trackScoringChances
       : DEFAULT_CONFIG.trackScoringChances,
+    trackPlayerNumbers: typeof config.trackPlayerNumbers === 'boolean'
+      ? config.trackPlayerNumbers
+      : DEFAULT_CONFIG.trackPlayerNumbers,
     reportShotsByZone: typeof config.reportShotsByZone === 'boolean'
       ? config.reportShotsByZone
       : DEFAULT_CONFIG.reportShotsByZone,
