@@ -198,6 +198,8 @@ export default function App() {
           headToHead={headToHeadReport}
           onBack={handleBackHome}
           onExportGameData={handleExportGame}
+          onUpdateShot={headToHeadReport ? null : gameState.updateShot}
+          onDeleteShot={headToHeadReport ? null : gameState.deleteShot}
           config={config}
         />
       )}

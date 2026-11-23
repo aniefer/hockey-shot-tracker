@@ -5,12 +5,25 @@ import ShotOverlay from './ShotOverlay';
 import PeriodControls from './PeriodControls';
 import PeriodReport from './PeriodReport';
 import ZoneToggles from './ZoneToggles';
+import ShotEditor from './ShotEditor';
+import { getShotCounts } from '../utils/shotStats';
 import { exportToPdf } from '../utils/pdfExport';
 import { getDefaultShotTeam } from '../utils/defaultShotTeam';
 import { getHomeStartSide, isRinkFlipped } from '../utils/rinkOrientation';
 
 function getDeviceOrientation() {
   return window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+}
+
+function ScoreOverlay({ x, name, goals, shots, color }) {
+  const label = name.length > 14 ? `${name.slice(0, 13)}…` : name;
+  return (
+    <g fill={color} textAnchor="middle" dominantBaseline="central">
+      <text x={x} y="29" fontSize="3.8" fontWeight="600">{label}</text>
+      <text x={x} y="42.5" fontSize="13" fontWeight="700">{goals}</text>
+      <text x={x} y="56" fontSize="3.8">{shots} shot{shots !== 1 ? 's' : ''}</text>
+    </g>
+  );
 }
 
 export default function GamePlay({ gameState, onEndGame, onExportGameData, config }) {
@@ -26,11 +39,14 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
     setZone,
     addShot,
     undoLastShot,
+    updateShot,
+    deleteShot,
   } = gameState;
 
   const [pendingShot, setPendingShot] = useState(null);
   const [fadeShot, setFadeShot] = useState(null);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [editorMode, setEditorMode] = useState(null);
   const [exportingReport, setExportingReport] = useState(false);
   const [exportingGameData, setExportingGameData] = useState(false);
   const [exportGameDataError, setExportGameDataError] = useState('');
@@ -126,6 +142,12 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
 
   const handleCancelShot = () => setPendingShot(null);
 
+  const intermissionCounts = {
+    ...getShotCounts(allShots),
+    homeGoals: allShots.filter((s) => s.team === 'home' && s.result === 'goal').length,
+    awayGoals: allShots.filter((s) => s.team === 'away' && s.result === 'goal').length,
+  };
+
   const periodLabel = (n) => {
     if (n === 'OT') return 'OT';
     if (n === 1) return 'P1';
@@ -151,7 +173,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
   return (
     <div
       className={maximized
-        ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-slate-900 p-2'
+        ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-slate-900 p-1 gap-1'
         : 'max-w-2xl mx-auto px-3 py-4 flex flex-col min-h-screen'}
       style={maximizedStyle}
     >
@@ -250,6 +272,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
                 activeZone={currentZone}
                 flipped={flipped}
                 orientation={rinkOrientation}
+                maximized={maximized}
                 onSelect={currentPeriod !== null ? setZone : null}
               />
             ) : null}
@@ -258,7 +281,7 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
             {currentPeriod === null && (
               <text
                 x="100"
-                y="42.5"
+                y="70"
                 textAnchor="middle"
                 dominantBaseline="central"
                 fill="#64748b"
@@ -268,6 +291,25 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
               >
                 Tap Start Period to begin tracking
               </text>
+            )}
+            {/* Score and shot totals between the circles and blue lines; home left, away right */}
+            {maximized && currentPeriod === null && game.periods.length > 0 && (
+              <>
+                <ScoreOverlay
+                  x={60.5}
+                  name={game.homeTeam}
+                  goals={intermissionCounts.homeGoals}
+                  shots={intermissionCounts.home}
+                  color="#2563eb"
+                />
+                <ScoreOverlay
+                  x={139.5}
+                  name={game.awayTeam}
+                  goals={intermissionCounts.awayGoals}
+                  shots={intermissionCounts.away}
+                  color="#ef4444"
+                />
+              </>
             )}
             {/* Fade-out shot confirmation */}
             {fadeShot && (
@@ -333,18 +375,23 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
 
       {/* Action buttons */}
       <div className={maximized
-        ? 'flex flex-wrap items-center justify-center gap-2 rounded-xl bg-white/95 p-2'
+        ? 'flex flex-wrap items-center justify-center gap-1.5 rounded-lg bg-white/95 p-0.5'
         : 'space-y-3 pb-4'}
       >
+        {maximized && (
+          <div className="mr-auto max-w-[22%] truncate text-xs font-bold leading-tight text-blue-600">
+            {game.homeTeam} {intermissionCounts.homeGoals} · {intermissionCounts.home} shots
+          </div>
+        )}
         {maximized && (
           <button
             type="button"
             onClick={() => setMaximized(false)}
             aria-label="Restore normal rink view"
             title="Restore normal rink view"
-            className="p-2 rounded-lg bg-slate-100 text-slate-700 active:bg-slate-200"
+            className="p-1 rounded-lg bg-slate-100 text-slate-700 active:bg-slate-200"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 3v5H3M3 8l6-6M16 3v5h5M21 8l-6-6M8 21v-5H3M3 16l6 6M16 21v-5h5M21 16l-6 6" />
             </svg>
           </button>
@@ -355,16 +402,24 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
               onClick={undoLastShot}
               disabled={currentPeriodShots.length === 0}
               className={maximized
-                ? 'px-4 py-2 text-sm whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
+                ? 'px-2.5 py-0.5 text-xs whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
                 : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
             >
               Undo
             </button>
             <button
+              onClick={() => setEditorMode('last')}
+              disabled={currentPeriodShots.length === 0}
+              className={maximized
+                ? 'px-2.5 py-0.5 text-xs whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
+                : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}>
+              Edit Last
+            </button>
+            <button
               onClick={() => setShowOverlay(true)}
               disabled={allShots.length === 0}
               className={maximized
-                ? 'px-4 py-2 text-sm whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
+                ? 'px-2.5 py-0.5 text-xs whitespace-nowrap bg-slate-100 text-slate-600 font-semibold rounded-lg active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'
                 : 'flex-1 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30 disabled:active:bg-slate-100'}
             >
               View Shots
@@ -383,6 +438,18 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
                 </span>
               ))}
           </div>
+        )}
+
+        {!maximized && currentPeriod === null && game.periods.length > 0 && (
+          <>
+            <button
+              onClick={() => setEditorMode('all')}
+              disabled={allShots.length === 0}
+              className="w-full py-2.5 bg-slate-100 text-slate-700 font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30"
+            >
+              Review &amp; Edit Shots
+            </button>
+          </>
         )}
 
         {/* Export period report */}
@@ -407,6 +474,11 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
           onEndGame={onEndGame}
           maximized={maximized}
         />
+        {maximized && (
+          <div className="ml-auto max-w-[22%] truncate text-right text-xs font-bold leading-tight text-red-500">
+            {intermissionCounts.awayGoals} · {intermissionCounts.away} shots {game.awayTeam}
+          </div>
+        )}
       </div>
 
       {/* Shot detail popup */}
@@ -420,6 +492,22 @@ export default function GamePlay({ gameState, onEndGame, onExportGameData, confi
           trackPlayerNumbers={config.trackPlayerNumbers}
           onConfirm={handleConfirmShot}
           onCancel={handleCancelShot}
+          deviceOrientation={deviceOrientation}
+          rotated={rotateMaximized}
+        />
+      )}
+
+      {editorMode && (
+        <ShotEditor
+          mode={editorMode}
+          periods={game.periods}
+          currentPeriod={currentPeriod}
+          homeTeam={game.homeTeam}
+          awayTeam={game.awayTeam}
+          config={config}
+          onUpdateShot={updateShot}
+          onDeleteShot={deleteShot}
+          onClose={() => setEditorMode(null)}
           deviceOrientation={deviceOrientation}
           rotated={rotateMaximized}
         />

@@ -13,6 +13,12 @@ export const ZONE_LABELS = {
 // Size of the zone bars and their gap from the ice, in rink units (200 x 85 ice).
 export const ZONE_BAND_HEIGHT = 8;
 export const ZONE_BAND_GAP = 2;
+// The maximized view uses a taller bar so it is easier to tap on a small device.
+export const ZONE_BAND_HEIGHT_MAXIMIZED = 10;
+
+export function getZoneBandHeight(maximized = false) {
+  return maximized ? ZONE_BAND_HEIGHT_MAXIMIZED : ZONE_BAND_HEIGHT;
+}
 
 // Normalized rink x-ranges (0–1) split at the blue lines, matching src/utils/defaultShotTeam.js.
 const END_RANGE = [0, 0.375];

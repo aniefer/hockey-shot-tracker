@@ -6,12 +6,14 @@ import ShotTimeline from './ShotTimeline';
 import GameMomentum from './GameMomentum';
 import ShotOutcomePie from './ShotOutcomePie';
 import ZoneTimeChart from './ZoneTimeChart';
+import ShotEditor from './ShotEditor';
 import { exportToPdf } from '../utils/pdfExport';
 import { getHomeStartSide, isRinkFlipped, normalizeFullGameShots } from '../utils/rinkOrientation';
 import { getShotCounts } from '../utils/shotStats';
 import { getGameZoneDurations } from '../utils/zoneTime';
 
-export default function GameSummary({ game, headToHead, onBack, onExportGameData, config }) {
+export default function GameSummary({ game, headToHead, onBack, onExportGameData, onUpdateShot, onDeleteShot, config }) {
+  const [editingShots, setEditingShots] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportingData, setExportingData] = useState(false);
   const [exportDataError, setExportDataError] = useState('');
@@ -205,6 +207,15 @@ export default function GameSummary({ game, headToHead, onBack, onExportGameData
           Home
         </button>
         <div className="flex items-center gap-1.5">
+          {!headToHead && onUpdateShot && (
+            <button
+              onClick={() => setEditingShots(true)}
+              disabled={allShots.length === 0}
+              className="px-2 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl active:bg-slate-200 transition-colors disabled:opacity-30"
+            >
+              Edit shots
+            </button>
+          )}
           {!headToHead && (
             <button
               onClick={handleExportGameData}
@@ -613,6 +624,20 @@ export default function GameSummary({ game, headToHead, onBack, onExportGameData
           </div>
         )}
       </div>
+      {editingShots && (
+        <ShotEditor
+          mode="all"
+          periods={game.periods}
+          currentPeriod={null}
+          homeTeam={game.homeTeam}
+          awayTeam={game.awayTeam}
+          config={config}
+          onUpdateShot={onUpdateShot}
+          onDeleteShot={onDeleteShot}
+          onClose={() => setEditingShots(false)}
+          deviceOrientation="portrait"
+        />
+      )}
     </div>
   );
 }

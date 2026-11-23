@@ -1,10 +1,11 @@
-import { ZONES, ZONE_BAND_GAP, ZONE_BAND_HEIGHT, ZONE_LABELS, getZoneXRange } from '../utils/zoneTime';
+import { ZONES, ZONE_BAND_GAP, ZONE_LABELS, getZoneBandHeight, getZoneXRange } from '../utils/zoneTime';
 
 const RINK_LENGTH = 200;
 const RINK_WIDTH = 85;
 
 // Drawn outside the ice, along its top long edge (the right edge in portrait).
-export default function ZoneToggles({ activeZone, flipped, orientation, onSelect }) {
+export default function ZoneToggles({ activeZone, flipped, orientation, onSelect, maximized = false }) {
+  const bandHeight = getZoneBandHeight(maximized);
   const isPortrait = orientation === 'portrait';
 
   return (
@@ -13,10 +14,10 @@ export default function ZoneToggles({ activeZone, flipped, orientation, onSelect
         const [startX, endX] = getZoneXRange(zone, flipped);
         const along = startX * RINK_LENGTH;
         const length = (endX - startX) * RINK_LENGTH;
-        const across = isPortrait ? RINK_WIDTH + ZONE_BAND_GAP : -(ZONE_BAND_GAP + ZONE_BAND_HEIGHT);
+        const across = isPortrait ? RINK_WIDTH + ZONE_BAND_GAP : -(ZONE_BAND_GAP + bandHeight);
         const rect = isPortrait
-          ? { x: across, y: along, width: ZONE_BAND_HEIGHT, height: length }
-          : { x: along, y: across, width: length, height: ZONE_BAND_HEIGHT };
+          ? { x: across, y: along, width: bandHeight, height: length }
+          : { x: along, y: across, width: length, height: bandHeight };
         const centerX = rect.x + rect.width / 2;
         const centerY = rect.y + rect.height / 2;
         const isActive = zone === activeZone;
@@ -50,7 +51,7 @@ export default function ZoneToggles({ activeZone, flipped, orientation, onSelect
               dominantBaseline="central"
               transform={isPortrait ? `rotate(90 ${centerX} ${centerY})` : undefined}
               fill={isActive ? '#ffffff' : '#64748b'}
-              fontSize="3.6"
+              fontSize={maximized ? 5.5 : 3.6}
               fontWeight={isActive ? '700' : '500'}
             >
               {ZONE_LABELS[zone]}

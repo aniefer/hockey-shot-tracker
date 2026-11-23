@@ -1,5 +1,5 @@
 import { normalizeRinkCoordinates } from '../utils/defaultShotTeam';
-import { ZONE_BAND_GAP, ZONE_BAND_HEIGHT } from '../utils/zoneTime';
+import { ZONE_BAND_GAP, getZoneBandHeight } from '../utils/zoneTime';
 
 /* Hockey rink SVG — whiteboard / dry-erase style.
    Proportions based on NHL regulation: 200 ft x 85 ft.
@@ -16,13 +16,12 @@ const BLUE_LINE_OFFSET_FROM_GOAL = 64;
 const BLUE_LINE_OFFSET = GOAL_LINE_OFFSET + BLUE_LINE_OFFSET_FROM_GOAL;
 const END_FACE_OFF_X = GOAL_LINE_OFFSET + 20;
 const FACE_OFF_Y_OFFSET = 22;
-const EDGE_MARGIN = ZONE_BAND_HEIGHT + ZONE_BAND_GAP;
 
 export default function HockeyRink({ onTapRink, children, edgeOverlay = null, orientation = 'landscape', maximized = false }) {
   const isPortrait = orientation === 'portrait';
 
   // Overlay content can sit outside the ice in a margin: above it in landscape, right of it in portrait.
-  const margin = edgeOverlay ? EDGE_MARGIN : 0;
+  const margin = edgeOverlay ? getZoneBandHeight(maximized) + ZONE_BAND_GAP : 0;
   const viewBox = isPortrait
     ? { x: 0, y: 0, width: RINK_WIDTH + margin, height: RINK_LENGTH }
     : { x: 0, y: -margin, width: RINK_LENGTH, height: RINK_WIDTH + margin };

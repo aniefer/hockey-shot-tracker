@@ -129,6 +129,32 @@ export function useGameState(initialGame = null) {
     });
   }, [currentPeriod]);
 
+  const updateShot = useCallback((shotId, changes) => {
+    setGame((prev) => {
+      const periods = prev.periods.map((p) =>
+        p.shots.some((shot) => shot.id === shotId)
+          ? { ...p, shots: p.shots.map((shot) => (shot.id === shotId ? { ...shot, ...changes } : shot)) }
+          : p
+      );
+      const updated = { ...prev, periods };
+      saveGame(updated);
+      return updated;
+    });
+  }, []);
+
+  const deleteShot = useCallback((shotId) => {
+    setGame((prev) => {
+      const periods = prev.periods.map((p) =>
+        p.shots.some((shot) => shot.id === shotId)
+          ? { ...p, shots: p.shots.filter((shot) => shot.id !== shotId) }
+          : p
+      );
+      const updated = { ...prev, periods };
+      saveGame(updated);
+      return updated;
+    });
+  }, []);
+
   const endGame = useCallback(() => {
     setGame((prev) => {
       // End any open period
@@ -170,6 +196,8 @@ export function useGameState(initialGame = null) {
     setZone,
     addShot,
     undoLastShot,
+    updateShot,
+    deleteShot,
     endGame,
   };
 }

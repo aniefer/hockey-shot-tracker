@@ -39,6 +39,9 @@ The rink stays clean throughout. No clutter, no marks piling up. You can tap "Vi
 Other things you can do during the game:
 
 - **Undo** the last shot if you mis-tap
+- **Edit Last** to change the last shot's team, result, or player number, or delete it
+- **Review & Edit Shots** between periods and **Edit shots** on the game summary to pick any shot and edit or delete it
+- Between periods in full-screen mode, the current score and shot totals are overlaid on the rink (home on the left, away on the right)
 - **Running shot counter** at the top so you always know the totals
 - **Time in zone** (if enabled in New Game): tap Home, Neutral, or Away in the bars just outside the top edge of the rink (the right edge in portrait) to switch the active zone. Only one zone is active at a time, and each period starts in Neutral. Taps on the zone bars don't record shots, and every tap on the ice does.
 - **Period management** handles the full flow: 1st, 2nd, and 3rd periods, plus optional overtime for tournament games

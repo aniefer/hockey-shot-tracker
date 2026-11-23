@@ -28,6 +28,10 @@ function ToggleButton({ active, onClick, children, color = 'blue', compact = fal
 
 export default function ShotPopup({
   initialTeam,
+  initialResult = null,
+  initialPlayerNumber = '',
+  title = 'Record Shot',
+  onDelete = null,
   homeTeam,
   awayTeam,
   trackBlockedShots = true,
@@ -39,8 +43,8 @@ export default function ShotPopup({
   rotated = false,
 }) {
   const [team, setTeam] = useState(initialTeam);
-  const [result, setResult] = useState(null);
-  const [playerNumber, setPlayerNumber] = useState('');
+  const [result, setResult] = useState(initialResult);
+  const [playerNumber, setPlayerNumber] = useState(initialPlayerNumber || '');
 
   const handleOk = () => {
     onConfirm({ team, result, playerNumber: trackPlayerNumbers ? playerNumber.trim() : '' });
@@ -55,7 +59,7 @@ export default function ShotPopup({
           rotated || deviceOrientation === 'landscape' ? 'max-w-md' : 'max-w-xs'
         } ${rotated ? 'max-h-full overflow-y-auto' : ''}`}
       >
-        <h3 className="text-lg font-bold text-slate-800 mb-4">Record Shot</h3>
+        <h3 className="text-lg font-bold text-slate-800 mb-4">{title}</h3>
 
         <div className="mb-4">
           <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Team</label>
@@ -108,6 +112,15 @@ export default function ShotPopup({
               maxLength={4}
             />
           </div>
+        )}
+
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="w-full mb-3 py-2.5 bg-red-50 text-red-600 font-semibold rounded-xl active:bg-red-100 transition-colors"
+          >
+            Delete Shot
+          </button>
         )}
 
         <div className="flex gap-3">
